@@ -1,0 +1,39 @@
+<resources>
+    <string name="app_name">热门电影</string>
+
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_settings" />
+
+
+
+    //排序设置String
+    <string name="action_settings">设置</string>
+    <string name="pref_mode_label">请输入排序方式</string>
+
+    <string name="pref_mode_label_popular">最受欢迎</string>
+
+    <string name="pref_mode_label_toprated">评分最高</string>
+
+    <string name="pref_mode_key">mode</string>
+
+    <string name="pref_mode_popular">popular</string>
+
+    <string name="pref_mode_toprated">toprated</string>
+
+    //DetailActivity中的strings
+    <string name="title_activity_detail">详情</string>
+    <string name="hello_world">detail</string>
+
+    <string name="action_refresh">刷新</string>
+    <string name="movie_detail_overview_close">收起</string>
+    <string name="movie_detail_overview_open">展开</string>
+    <string name="action_collect">收藏</string>
+    <string name="movie_detail_runtime_extraText">分钟</string>
+    <string name="movie_detail_voteAverage_extraText">/10</string>
+    <string name="movie_detail_videos_title_text">预告片</string>
+    <string name="movie_detail_videos_itemtitle_text">预告片</string>
+    <string name="movie_detail_videos_none_text">该电影暂无预告片</string>
+    <string name="movie_detail_reviews_title_text">评论</string>
+    <string name="movie_detail_reviews_itemtitle_text">评论</string>
+    <string name="movie_detail_reviews_none_text">该电影暂无评论</string>
+</resources>

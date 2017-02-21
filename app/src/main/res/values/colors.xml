@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+
+    <color name="detail_title_background">#2196F3</color>
+    <color name="detail_title_textcolor">#FFFFFF</color>
+    <color name="movie_detail_background">#FFFFFF</color>
+    <color name="detail_date_textcolor">#000000</color>
+    <color name="detail_overview_textcolor">#000000</color>
+    <color name="detail_popularity_textcolor">#000000</color>
+    <color name="detail_runtime_textcolor">#000000</color>
+    <color name="detail_videos_textcolor">#000000</color>
+    <color name="detail_reviews_textcolor">#000000</color>
+    <color name="detail_reviews_title_textcolor">#FFFFFF</color>
+    <color name="detail_reviews_title_background_color">#0097A7</color>
+    <color name="detail_videos_title_background_color">#0097A7</color>
+    <color name="detail_videos_title_textcolor">#FFFFFF</color>
+    <color name="detail_videos_number_background">#18FFFF</color>
+    <color name="detail_reviews_number_background">#18FFFF</color>
+
+</resources>
