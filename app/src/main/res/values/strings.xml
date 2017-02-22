@@ -31,7 +31,7 @@
     <string name="movie_detail_overview_close">收起</string>
     <string name="movie_detail_overview_open">展开</string>
 
-    <string name="action_collect">收藏</string>
+    <string name="action_collect"></string>
     <string name="action_collect_cancel">取消收藏</string>
     <string name="movie_detail_runtime_extraText">分钟</string>
     <string name="movie_detail_voteAverage_extraText">/10</string>
