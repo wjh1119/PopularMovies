@@ -230,6 +230,9 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
                 //载入电影名字
                 String name = (String) detailDataArray.get("name");
                 nameTextView.setText(name);
+                nameTextView.setFocusable(true);
+                nameTextView.setFocusableInTouchMode(true);
+                nameTextView.requestFocus();
 
                 //载入电影图片
                 BitmapDrawable bitmapDrawable = (BitmapDrawable) detailDataArray
