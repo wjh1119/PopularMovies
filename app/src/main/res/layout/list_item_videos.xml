@@ -16,12 +16,25 @@
         android:background="@color/detail_videos_number_background"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-    <TextView
-        android:id="@+id/list_item_videos_name"
-        tools:text="video"
-        android:textSize="@dimen/datail_videos_textsize"
-        android:textColor="@color/detail_videos_textcolor"
-        android:padding="@dimen/datail_videos_padding"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/list_item_videos_name"
+            tools:text="video"
+            android:textSize="@dimen/datail_videos_textsize"
+            android:textColor="@color/detail_videos_textcolor"
+            android:padding="@dimen/datail_videos_padding"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content" />
+        <ImageView
+            android:id="@+id/list_item_videos_play"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="@dimen/detail_videos_play_height"
+            android:layout_gravity="center"
+            />
+    </LinearLayout>
 </LinearLayout>

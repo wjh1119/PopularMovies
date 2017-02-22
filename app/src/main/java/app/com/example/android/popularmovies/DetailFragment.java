@@ -242,7 +242,7 @@ public class DetailFragment extends Fragment{
 
                 //载入电影评分
                 String voteAverage = data.getString(COL_VOTE_AVERAGE);
-                voteAverageTextView.setText(getString(R.string.movie_detail_voteAverage_extraText));
+                voteAverageTextView.setText(voteAverage+getString(R.string.movie_detail_voteAverage_extraText));
 
                 //movie's runtime
                 int runtime = data.getInt(COL_RUNTIME);
