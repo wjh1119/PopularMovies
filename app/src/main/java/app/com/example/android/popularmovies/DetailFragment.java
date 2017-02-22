@@ -139,9 +139,11 @@ public class DetailFragment extends Fragment{
         //判断该电影是否被收藏，并以此显示对应的菜单“收藏”或“取消收藏”。
         if (mIsCollect != null) {
             if (mIsCollect.equals("true")){
-                menuItem.setTitle(R.string.action_collect_cancel); //"取消收藏“
+                //menuItem.setTitle(R.string.action_collect_cancel); //"取消收藏“
+                menuItem.setIcon(R.drawable.ic_favorite_white_24dp);
             }else{
                 menuItem.setTitle(R.string.action_collect);//”收藏
+                menuItem.setIcon(R.drawable.ic_favorite_border_white_24dp);
             }
         }else{
             Log.d(LOG_TAG,"mIsCollect is null");
@@ -158,14 +160,16 @@ public class DetailFragment extends Fragment{
         int id = item.getItemId();
         if (id == R.id.action_collect) {
             Log.v(LOG_TAG,"click");
-            if(item.getTitle().equals(getString(R.string.action_collect))){//“收藏”
+            if(mIsCollect.equals("false")){//“收藏”
                 Toast.makeText(getContext(),"收藏成功", Toast.LENGTH_LONG).show();
-                item.setTitle(getString(R.string.action_collect_cancel));//“取消收藏”
+                //item.setTitle(getString(R.string.action_collect_cancel));//“取消收藏”
+                item.setIcon(R.drawable.ic_favorite_white_24dp);
                 updateCollect("true");
                 mIsCollect = "true";
             }else{
                 Toast.makeText(getContext(),"取消收藏", Toast.LENGTH_LONG).show();
-                item.setTitle(getString(R.string.action_collect));//“收藏”
+                //item.setTitle(getString(R.string.action_collect));//“收藏”
+                item.setIcon(R.drawable.ic_favorite_border_white_24dp);
                 updateCollect("false");
                 mIsCollect = "false";
             }
