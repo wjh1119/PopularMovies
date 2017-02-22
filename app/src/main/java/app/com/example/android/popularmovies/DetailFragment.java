@@ -139,9 +139,9 @@ public class DetailFragment extends Fragment{
         //判断该电影是否被收藏，并以此显示对应的菜单“收藏”或“取消收藏”。
         if (mIsCollect != null) {
             if (mIsCollect.equals("true")){
-                menuItem.setTitle("取消收藏");
+                menuItem.setTitle(R.string.action_collect_cancel); //"取消收藏“
             }else{
-                menuItem.setTitle("收藏");
+                menuItem.setTitle(R.string.action_collect);//”收藏
             }
         }else{
             Log.d(LOG_TAG,"mIsCollect is null");
@@ -158,14 +158,14 @@ public class DetailFragment extends Fragment{
         int id = item.getItemId();
         if (id == R.id.action_collect) {
             Log.v(LOG_TAG,"click");
-            if(item.getTitle().equals("收藏")){
+            if(item.getTitle().equals(getString(R.string.action_collect))){//“收藏”
                 Toast.makeText(getContext(),"收藏成功", Toast.LENGTH_LONG).show();
-                item.setTitle("取消收藏");
+                item.setTitle(getString(R.string.action_collect_cancel));//“取消收藏”
                 updateCollect("true");
                 mIsCollect = "true";
             }else{
                 Toast.makeText(getContext(),"取消收藏", Toast.LENGTH_LONG).show();
-                item.setTitle("收藏");
+                item.setTitle(getString(R.string.action_collect));//“收藏”
                 updateCollect("false");
                 mIsCollect = "false";
             }
@@ -242,12 +242,11 @@ public class DetailFragment extends Fragment{
 
                 //载入电影评分
                 String voteAverage = data.getString(COL_VOTE_AVERAGE);
-                voteAverageTextView.setText(voteAverage+getContext().getResources().getString(R.string.movie_detail_voteAverage_extraText));
+                voteAverageTextView.setText(getString(R.string.movie_detail_voteAverage_extraText));
 
                 //movie's runtime
                 int runtime = data.getInt(COL_RUNTIME);
-                runtimeTextView.setText(runtime + getContext().getResources().
-                        getString(R.string.movie_detail_runtime_extraText));
+                runtimeTextView.setText(runtime + getString(R.string.movie_detail_runtime_extraText));
 
                 //载入电影简介，并实现展开收起的功能
                 String overview = data.getString(COL_OVERVIEW);
@@ -323,8 +322,7 @@ public class DetailFragment extends Fragment{
                     //当无评论时显示无评论
                     if (numberOfReviews == 0){
                         HashMap reviewHashMap = new HashMap();
-                        String number = getContext().getResources().
-                                getString(R.string.movie_detail_reviews_none_text);
+                        String number = getString(R.string.movie_detail_reviews_none_text);
                         String content = "";
                         String author = "";
 
@@ -349,8 +347,7 @@ public class DetailFragment extends Fragment{
                         if (content != null || author != null){
 
                             //打包影片的评论信息并传入适配器
-                            reviewHashMap.put("number",getContext().getResources().
-                                    getString(R.string.movie_detail_reviews_itemtitle_text) + (i+1));
+                            reviewHashMap.put("number",getString(R.string.movie_detail_reviews_itemtitle_text) + (i+1));
                             reviewHashMap.put("content",content);
                             reviewHashMap.put("author","------" + author);
 
@@ -413,8 +410,7 @@ public class DetailFragment extends Fragment{
                     //无预告片时显示无预告
                     if (numberOfvideos == 0){
                         HashMap videoHashMap = new HashMap();
-                        String number = getContext().getResources().
-                                getString(R.string.movie_detail_videos_none_text);
+                        String number = getString(R.string.movie_detail_videos_none_text);
                         String name = "";
                         String key = "";
 
@@ -436,8 +432,7 @@ public class DetailFragment extends Fragment{
 
                         JSONObject videoInfo = videosJsonArray.getJSONObject(i);
 
-                        number = getContext().getResources().
-                                getString(R.string.movie_detail_videos_itemtitle_text) + (i+1);
+                        number = getString(R.string.movie_detail_videos_itemtitle_text) + (i+1);
                         name = videoInfo.getString(OWM_NAME);
                         key = videoInfo.getString(OWM_KEY);
                         if (name != null ){

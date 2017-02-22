@@ -25,9 +25,14 @@
     <string name="hello_world">detail</string>
 
     <string name="action_refresh">刷新</string>
+    <string name="action_showCollection">我的收藏列表</string>
+    <string name="action_showCollection_showAllMovies">全部电影列表</string>
+
     <string name="movie_detail_overview_close">收起</string>
     <string name="movie_detail_overview_open">展开</string>
+
     <string name="action_collect">收藏</string>
+    <string name="action_collect_cancel">取消收藏</string>
     <string name="movie_detail_runtime_extraText">分钟</string>
     <string name="movie_detail_voteAverage_extraText">/10</string>
     <string name="movie_detail_videos_title_text">预告片</string>
@@ -36,4 +41,5 @@
     <string name="movie_detail_reviews_title_text">评论</string>
     <string name="movie_detail_reviews_itemtitle_text">评论</string>
     <string name="movie_detail_reviews_none_text">该电影暂无评论</string>
+
 </resources>

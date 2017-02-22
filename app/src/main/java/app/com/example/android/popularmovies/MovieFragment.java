@@ -42,11 +42,14 @@ import static app.com.example.android.popularmovies.data.MovieContract.MovieEntr
 /**
  * Encapsulates fetching the forecast and displaying it as a {@link GridView} layout.
  */
-public class MovieFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class MovieFragment extends Fragment {
 
     String LOG_TAG = MovieFragment.class.getSimpleName();
     public static ProgressDialog progressDialog;
     private static final int MOVIE_LOADER = 0;
+    private static final int COLLECTION_LOADER = 1;
+
+    private static boolean mIsShowCollection = false;
     // For the forecast view we're showing only a small subset of the stored data.
     // Specify the columns we need.
     public static final String[] MOVIE_COLUMNS = {
@@ -95,7 +98,7 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.refresh, menu);
+        inflater.inflate(R.menu.rankfragment, menu);
     }
 
     @Override
@@ -106,6 +109,20 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
             updateMovie();
+            return true;
+        }
+        if (id == R.id.action_showCollection) {
+            if(item.getTitle().equals(getString(R.string.action_showCollection))){//“我的收藏列表”
+                item.setTitle(getString(R.string.action_showCollection_showAllMovies));//“全部电影列表”
+                getLoaderManager().destroyLoader(MOVIE_LOADER);
+                getLoaderManager().initLoader(COLLECTION_LOADER,null,new CollectionLoaderCallbacks());
+                mIsShowCollection = true;
+            }else{
+                item.setTitle(getString(R.string.action_showCollection));//“我的收藏列表”
+                getLoaderManager().destroyLoader(COLLECTION_LOADER);
+                getLoaderManager().initLoader(MOVIE_LOADER,null,new MoviesLoaderCallbacks());
+                mIsShowCollection = false;
+            }
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -163,7 +180,7 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        getLoaderManager().initLoader(MOVIE_LOADER, null, this);
+        getLoaderManager().initLoader(MOVIE_LOADER, null, new MoviesLoaderCallbacks());
         super.onActivityCreated(savedInstanceState);
     }
 
@@ -184,46 +201,89 @@ public class MovieFragment extends Fragment implements LoaderManager.LoaderCallb
     }
 
     void onModeChanged( ) {
-        //getLoaderManager().destroyLoader(MOVIE_LOADER);
-        getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
-        //getLoaderManager().initLoader(MOVIE_LOADER, null, this);
+        if (mIsShowCollection) {
+            getLoaderManager().restartLoader(COLLECTION_LOADER, null, new CollectionLoaderCallbacks());
+        }else{
+            getLoaderManager().restartLoader(MOVIE_LOADER, null, new MoviesLoaderCallbacks());
+        }
         Log.v(LOG_TAG,"mode changed");
     }
 
-    @Override
-    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        String mode = Utility.getPreferredMode(getActivity());
+    private class MoviesLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor>{
+        @Override
+        public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+            String mode = Utility.getPreferredMode(getActivity());
 
-        String sortOrder = MovieContract.MovieEntry.COLUMN_ID + " ASC";
-        if (mode.equals("popular")){
-            sortOrder = COLUMN_POPULAR_RANK + " ASC";
-        }else if (mode.equals("toprated")) {
-            sortOrder = MovieContract.MovieEntry.COLUMN_TOPRATED_RANK + " ASC";
-        }else{
-            Log.e("mode","error");
+            String sortOrder = MovieContract.MovieEntry.COLUMN_ID + " ASC";
+            if (mode.equals("popular")){
+                sortOrder = COLUMN_POPULAR_RANK + " ASC";
+            }else if (mode.equals("toprated")) {
+                sortOrder = MovieContract.MovieEntry.COLUMN_TOPRATED_RANK + " ASC";
+            }else{
+                Log.e("mode","error");
+            }
+
+            Uri movieForModeUri = MovieContract.MovieEntry.buildMovieWithModeUri(
+                    mode);
+            Log.v("onCreateLoader","create movieForModeUri: " + movieForModeUri.toString());
+
+            CursorLoader cursorLoader = new CursorLoader(getActivity(),
+                    movieForModeUri,
+                    MOVIE_COLUMNS,
+                    null,
+                    null,
+                    sortOrder);
+            return cursorLoader;
         }
 
-        Uri movieForModeUri = MovieContract.MovieEntry.buildMovieWithModeUri(
-                mode);
-        Log.v("onCreateLoader","create movieForModeUri: " + movieForModeUri.toString());
+        @Override
+        public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
+            mMovieAdapter.swapCursor(cursor);
+            Log.v("onLoadFinished", cursor.toString());
+        }
 
-        CursorLoader cursorLoader = new CursorLoader(getActivity(),
-                movieForModeUri,
-                MOVIE_COLUMNS,
-                null,
-                null,
-                sortOrder);
-        return cursorLoader;
+        @Override
+        public void onLoaderReset(Loader<Cursor> cursorLoader) {
+            mMovieAdapter.swapCursor(null);
+        }
     }
+    private class CollectionLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor>{
+        @Override
+        public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+            String mode = Utility.getPreferredMode(getActivity());
 
-    @Override
-    public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
-        mMovieAdapter.swapCursor(cursor);
-        Log.v("onLoadFinished", cursor.toString());
-    }
+            String sortOrder = MovieContract.MovieEntry.COLUMN_ID + " ASC";
+            if (mode.equals("popular")){
+                sortOrder = COLUMN_POPULAR_RANK + " ASC";
+            }else if (mode.equals("toprated")) {
+                sortOrder = MovieContract.MovieEntry.COLUMN_TOPRATED_RANK + " ASC";
+            }else{
+                Log.e("mode","error");
+            }
 
-    @Override
-    public void onLoaderReset(Loader<Cursor> cursorLoader) {
-        mMovieAdapter.swapCursor(null);
+            Uri movieForModeAndCollectUri = MovieContract.MovieEntry.buildMovieWithModeAndCollectUri(
+                    mode);
+            Log.v("onCreateLoader","create movieForModeUri: " + movieForModeAndCollectUri.toString());
+
+            CursorLoader cursorLoader = new CursorLoader(getActivity(),
+                    movieForModeAndCollectUri,
+                    MOVIE_COLUMNS,
+                    null,
+                    null,
+                    sortOrder);
+            return cursorLoader;
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
+            mMovieAdapter.swapCursor(cursor);
+            Log.v("onLoadFinished", cursor.toString());
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> cursorLoader) {
+            mMovieAdapter.swapCursor(null);
+        }
     }
 }
+

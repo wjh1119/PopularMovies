@@ -21,6 +21,7 @@ public class MovieProvider extends ContentProvider {
     public static final int MOVIE = 100;
     public static final int MOVIE_WITH_MODE = 101;
     public static final int MOVIE_WITH_MODE_AND_RANK = 102;
+    public static final int MOVIE_WITH_MODE_AND_COLLECT = 103;
 
     private static final SQLiteQueryBuilder sRankByModeQueryBuilder;
 
@@ -41,6 +42,16 @@ public class MovieProvider extends ContentProvider {
     private static final String sTopratedAndRankSelection =
             MovieContract.MovieEntry.TABLE_NAME+
                     "." + MovieContract.MovieEntry.COLUMN_TOPRATED_RANK + " = ? ";
+
+    private static final String sPopularAndCollectSelection =
+            MovieContract.MovieEntry.TABLE_NAME+
+                    "." + MovieContract.MovieEntry.COLUMN_POPULAR_RANK + " > ? AND "
+                    + MovieContract.MovieEntry.COLUMN_COLLECT+ " = ? ";
+
+    private static final String sTopratedAndCollectSelection =
+            MovieContract.MovieEntry.TABLE_NAME+
+                    "." + MovieContract.MovieEntry.COLUMN_TOPRATED_RANK + " > ? AND "
+                    + MovieContract.MovieEntry.COLUMN_COLLECT+ " = ? ";
 
     private static final String sPopularSelection =
             MovieContract.MovieEntry.TABLE_NAME+
@@ -101,6 +112,32 @@ public class MovieProvider extends ContentProvider {
         );
     }
 
+    private Cursor getMovieByModeAndCollect(
+            Uri uri, String[] projection, String sortOrder) {
+        String mode = MovieContract.MovieEntry.getModeFromUri(uri);
+
+        String[] selectionArgs;
+        String selection;
+        if (mode.equals("popular")) {
+            selectionArgs = new String[]{Integer.toString(0),"true"};
+            selection = sPopularAndCollectSelection;
+        }else if (mode.equals("toprated")) {
+            selectionArgs = new String[]{Integer.toString(0),"true"};
+            selection = sTopratedAndCollectSelection;
+        }else{
+            throw new UnsupportedOperationException("Unknown uri: " + uri);
+        }
+
+        return sRankByModeQueryBuilder.query(mOpenHelper.getReadableDatabase(),
+                projection,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                sortOrder
+        );
+    }
+
     /*
         Students: Here is where you need to create the UriMatcher. This UriMatcher will
         match each URI to the WEATHER, WEATHER_WITH_LOCATION, WEATHER_WITH_LOCATION_AND_DATE,
@@ -121,6 +158,7 @@ public class MovieProvider extends ContentProvider {
         matcher.addURI(authority, MovieContract.PATH_MOVIE, MOVIE);
         matcher.addURI(authority, MovieContract.PATH_MOVIE + "/*", MOVIE_WITH_MODE);
         matcher.addURI(authority, MovieContract.PATH_MOVIE + "/*/#", MOVIE_WITH_MODE_AND_RANK);
+        matcher.addURI(authority, MovieContract.PATH_MOVIE + "/*/*", MOVIE_WITH_MODE_AND_COLLECT);
 
         return matcher;
     }
@@ -148,6 +186,8 @@ public class MovieProvider extends ContentProvider {
 
         switch (match) {
             // Student: Uncomment and fill out these two cases
+            case MOVIE_WITH_MODE_AND_COLLECT:
+                return MovieContract.MovieEntry.CONTENT_TYPE;
             case MOVIE_WITH_MODE_AND_RANK:
                 return MovieContract.MovieEntry.CONTENT_ITEM_TYPE;
             case MOVIE_WITH_MODE:
@@ -172,12 +212,18 @@ public class MovieProvider extends ContentProvider {
                 retCursor = getMovieByModeAndRank(uri, projection, sortOrder);
                 break;
             }
-            // "weather/*"
+            // "movie/*/*"
+            case MOVIE_WITH_MODE_AND_COLLECT:
+            {
+                retCursor = getMovieByModeAndCollect(uri, projection, sortOrder);
+                break;
+            }
+            // "movie/*"
             case MOVIE_WITH_MODE: {
                 retCursor = getRankByMode(uri, projection, sortOrder);
                 break;
             }
-            // "weather"
+            // "movie"
             case MOVIE: {
                 retCursor = mOpenHelper.getReadableDatabase().query(
                         MovieContract.MovieEntry.TABLE_NAME,

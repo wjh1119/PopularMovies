@@ -90,7 +90,14 @@ public class MovieContract {
                     .appendPath(Integer.toString(rank)).build().toString());
             return CONTENT_URI.buildUpon().appendPath(mode)
                     .appendPath(Integer.toString(rank)).build();
+        }
 
+        public static Uri buildMovieWithModeAndCollectUri(
+                String mode) {
+            Log.v("intent build","uri is " + CONTENT_URI.buildUpon().appendPath(mode)
+                    .appendPath("c").build().toString());
+            return CONTENT_URI.buildUpon().appendPath(mode)
+                    .appendPath("c").build();
         }
 
         public static String getModeFromUri(Uri uri){
