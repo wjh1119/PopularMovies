@@ -74,7 +74,10 @@ public class FetchMovieTask extends AsyncTask<String, Integer, Void> {
     @Override
     protected Void doInBackground(String... params) {
 
-        int progress = 0;
+        if(isCancelled()){
+            return null;
+        }
+
         int progressAfterGetPopularJsonStr = 5;
         int progressAfterGetTopratedJsonStr = 10;
         int progressAfterGetPopularData = 55;
@@ -222,6 +225,11 @@ public class FetchMovieTask extends AsyncTask<String, Integer, Void> {
                 SQLiteDatabase db = dbHelper.getWritableDatabase();
                 // Insert the new movie information into the database
                 for(int i = 0; i < numberOfMovie; i++) {
+
+                    if(isCancelled()){
+                        break;
+                    }
+
                     ContentValues movieValues = new ContentValues();
 
                     //MovieEntry所需要的数据
