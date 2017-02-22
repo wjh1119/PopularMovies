@@ -61,6 +61,8 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
 
     private Cursor mData;
 
+    private MenuItem mCollectMenuItem;
+
     private static final int DETAIL_LOADER = 0;
 
     public static final String[] MOVIE_COLUMNS = {
@@ -128,16 +130,16 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         // Inflate the menu; this adds items to the action bar if it is present.
         inflater.inflate(R.menu.detailfragment, menu);
 
-        MenuItem menuItem = menu.findItem(R.id.action_collect);
+        mCollectMenuItem = menu.findItem(R.id.action_collect);
 
         //判断该电影是否被收藏，并以此显示对应的菜单“收藏”或“取消收藏”。
         if (mIsCollect != null) {
             if (mIsCollect.equals("true")){
                 //menuItem.setTitle(R.string.action_collect_cancel); //"取消收藏“
-                menuItem.setIcon(R.drawable.ic_favorite_white_24dp);
+                mCollectMenuItem.setIcon(R.drawable.ic_favorite_white_24dp);
             }else{
-                menuItem.setTitle(R.string.action_collect);//”收藏
-                menuItem.setIcon(R.drawable.ic_favorite_border_white_24dp);
+                //menuItem.setTitle(R.string.action_collect);//”收藏
+                mCollectMenuItem.setIcon(R.drawable.ic_favorite_border_white_24dp);
             }
         }else{
             Log.d(LOG_TAG,"mIsCollect is null");
@@ -228,6 +230,9 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
                 //载入电影名字
                 String name = (String) detailDataArray.get("name");
                 nameTextView.setText(name);
+                nameTextView.setFocusable(true);
+                nameTextView.setFocusableInTouchMode(true);
+                nameTextView.requestFocus();
 
                 //载入电影图片
                 BitmapDrawable bitmapDrawable = (BitmapDrawable) detailDataArray
@@ -236,6 +241,17 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
 
                 mMovieId = (String) detailDataArray.get("movieId");
                 mIsCollect = (String) detailDataArray.get("isCollect");
+                if (mIsCollect != null) {
+                    if (mIsCollect.equals("true")){
+                        //menuItem.setTitle(R.string.action_collect_cancel); //"取消收藏“
+                        mCollectMenuItem.setIcon(R.drawable.ic_favorite_white_24dp);
+                    }else{
+                        //menuItem.setTitle(R.string.action_collect);//”收藏
+                        mCollectMenuItem.setIcon(R.drawable.ic_favorite_border_white_24dp);
+                    }
+                }else{
+                    Log.d(LOG_TAG,"mIsCollect is null");
+                }
 
                 //载入电影上映日期
                 String date = (String) detailDataArray.get("date");
