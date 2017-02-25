@@ -67,11 +67,8 @@ public class MovieAdapter extends CursorAdapter {
 
         ImageView imageView = (ImageView) view;
 
-        int width = displayMetrics.widthPixels;// 屏幕宽度（像素）
-        int height= displayMetrics.heightPixels; // 屏幕高度（像素）
 
         ViewGroup.LayoutParams layoutParams = imageView.getLayoutParams();
-        layoutParams.width = width / 2;
         layoutParams.height = layoutParams.width * 3 / 2;
         imageView.setLayoutParams(layoutParams);
 

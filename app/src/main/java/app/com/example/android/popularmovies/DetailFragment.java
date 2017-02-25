@@ -1,9 +1,9 @@
 package app.com.example.android.popularmovies;
 
 import android.content.ContentValues;
-import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -34,6 +34,7 @@ import butterknife.Unbinder;
 
 public class DetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     private static final String LOG_TAG = DetailFragment.class.getSimpleName();
+    static final String DETAIL_URI = "URI";
 
     //使用Butter knife对id和view进行连接
     @BindView(R.id.movie_detail_name)
@@ -62,6 +63,8 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     private Cursor mData;
 
     private MenuItem mCollectMenuItem;
+
+    private Uri mUri;
 
     private static final int DETAIL_LOADER = 0;
 
@@ -115,6 +118,11 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
                              Bundle savedInstanceState) {
         mView = inflater.inflate(R.layout.fragment_detail, container, false);
 
+        //获取Uri
+        Bundle arguments = getArguments();
+        if (arguments != null) {
+            mUri = arguments.getParcelable(DetailFragment.DETAIL_URI);
+        }
         return mView;
     }
 
@@ -190,25 +198,33 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         }
     }
 
+    void onModeChanged( String mode ) {
+        // replace the uri, since the mode has changed
+        Uri uri = mUri;
+        if (null != uri) {
+            int rank = MovieContract.MovieEntry.getRankFromUri(uri);
+            Uri updatedUri = MovieContract.MovieEntry.buildMovieWithModeAndRankUri(mode, rank);
+            mUri = updatedUri;
+            getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
+        }
+    }
+
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Log.v(LOG_TAG, "In onCreateLoader");
-        Intent intent = getActivity().getIntent();
-        if (intent == null) {
-            return null;
-        }
-        Log.v(LOG_TAG,intent.getData().toString());
 
         // Now create and return a CursorLoader that will take care of
         // creating a Cursor for the data being displayed.
-        return new CursorLoader(
-                getActivity(),
-                intent.getData(),
-                MOVIE_COLUMNS,
-                null,
-                null,
-                null
-        );
+        if ( null != mUri ) {
+            return new CursorLoader(
+                    getActivity(),
+                    mUri,
+                    MOVIE_COLUMNS,
+                    null,
+                    null,
+                    null
+            );
+        }
+        return null;
     }
 
     @Override
@@ -219,7 +235,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         Log.d(LOG_TAG,Thread.currentThread().getName());
         mData = data;
         //ButterKnife连接
-        unbinder = ButterKnife.bind(DetailFragment.this, mView);
+        ButterKnife.bind(DetailFragment.this, mView);
 
         FetchDetailTask fetchDetailTask = new FetchDetailTask(getContext());
         fetchDetailTask.setOnDataFinishedListener(new FetchDetailTask.OnDataFinishedListener(){
@@ -333,6 +349,5 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        unbinder.unbind();
     }
 }

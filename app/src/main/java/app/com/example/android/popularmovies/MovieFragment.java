@@ -17,7 +17,6 @@ package app.com.example.android.popularmovies;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -52,6 +51,11 @@ public class MovieFragment extends Fragment {
     private static final int COLLECTION_LOADER = 1;
 
     private static boolean mIsShowCollection = false;
+
+    private GridView mGridView;
+    private int mPosition = GridView.INVALID_POSITION;
+
+    private static final String SELECTED_KEY = "selected_position";
 
     FetchMovieTask mMovieTask;
     // For the forecast view we're showing only a small subset of the stored data.
@@ -176,11 +180,11 @@ public class MovieFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         // Get a reference to the ListView, and attach this adapter to it.
-        GridView gridView = (GridView) rootView.findViewById(R.id.grid_fragment);
-        gridView.setAdapter(mMovieAdapter);
+        mGridView = (GridView) rootView.findViewById(R.id.grid_fragment);
+        mGridView.setAdapter(mMovieAdapter);
 
         // We'll call our MainActivity
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
@@ -189,19 +193,18 @@ public class MovieFragment extends Fragment {
                 Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
                 if (cursor != null) {
                     String mode = Utility.getPreferredMode(getActivity());
-                    Intent intent = null;
                     Log.v("intent","cursor" +" popular rank: " + cursor.getInt(COL_POPULAR_RANK) +
                             ", toprated rank: "+ cursor.getInt(COL_TOPRATED_RANK));
                     if (mode.equals("popular")){
-                        intent = new Intent(getActivity(), DetailActivity.class)
-                                .setData(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
+                        ((Callback) getActivity())
+                                .onItemSelected(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
                                         mode, cursor.getInt(COL_POPULAR_RANK)
                                 ));
                         Log.v("intent","sent intent with mode: "+ mode +" and rank: "
                                 + cursor.getInt(COL_POPULAR_RANK));
                     }else if (mode.equals("toprated")){
-                        intent = new Intent(getActivity(), DetailActivity.class)
-                                .setData(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
+                        ((Callback) getActivity())
+                                .onItemSelected(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
                                         mode, cursor.getInt(COL_TOPRATED_RANK)
                                 ));
                         Log.v("intent","sent intent with mode: "+ mode +" and rank: "
@@ -209,10 +212,20 @@ public class MovieFragment extends Fragment {
                     }else{
                         Log.e("intent","mode is wrong");
                     }
-                    startActivity(intent);
                 }
             }
         });
+
+        // If there's instance state, mine it for useful information.
+        // The end-goal here is that the user never knows that turning their device sideways
+        // does crazy lifecycle related things.  It should feel like some stuff stretched out,
+        // or magically appeared to take advantage of room, but data or place in the app was never
+        // actually *lost*.
+        if (savedInstanceState != null && savedInstanceState.containsKey(SELECTED_KEY)) {
+            // The gridview probably hasn't even been populated yet.  Actually perform the
+            // swapout in onLoadFinished.
+            mPosition = savedInstanceState.getInt(SELECTED_KEY);
+        }
         return rootView;
     }
 
@@ -247,6 +260,17 @@ public class MovieFragment extends Fragment {
         Log.v(LOG_TAG,"mode changed");
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        // When tablets rotate, the currently selected list item needs to be saved.
+        // When no item is selected, mPosition will be set to Listview.INVALID_POSITION,
+        // so check for that before storing.
+        if (mPosition != GridView.INVALID_POSITION) {
+            outState.putInt(SELECTED_KEY, mPosition);
+        }
+        super.onSaveInstanceState(outState);
+    }
+
     private class MoviesLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor>{
         @Override
         public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
@@ -278,6 +302,11 @@ public class MovieFragment extends Fragment {
         public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
             mMovieAdapter.swapCursor(cursor);
             Log.v("onLoadFinished", cursor.toString());
+            if (mPosition != GridView.INVALID_POSITION) {
+                // If we don't need to restart the loader, and there's a desired position to restore
+                // to, do so now.
+                mGridView.smoothScrollToPosition(mPosition);
+            }
         }
 
         @Override
@@ -316,12 +345,22 @@ public class MovieFragment extends Fragment {
         public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
             mMovieAdapter.swapCursor(cursor);
             Log.v("onLoadFinished", cursor.toString());
+            if (mPosition != GridView.INVALID_POSITION) {
+                // If we don't need to restart the loader, and there's a desired position to restore
+                // to, do so now.
+                mGridView.smoothScrollToPosition(mPosition);
+            }
         }
 
         @Override
         public void onLoaderReset(Loader<Cursor> cursorLoader) {
             mMovieAdapter.swapCursor(null);
         }
+    }
+
+    public interface Callback {
+
+        public void onItemSelected(Uri dateUri);
     }
 }
 

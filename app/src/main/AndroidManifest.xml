@@ -12,6 +12,7 @@
         android:resizeable="true"
         android:anyDensity="true" />
 
+    <!--应用信息-->
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -46,6 +47,7 @@
         <provider
             android:authorities="app.com.example.android.popularmovies"
             android:name=".data.MovieProvider"/>
+        <!--<service android:name=".service.PopularMoviesService"/>-->
     </application>
 
 </manifest>
