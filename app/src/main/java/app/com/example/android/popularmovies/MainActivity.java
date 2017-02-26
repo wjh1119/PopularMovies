@@ -40,6 +40,7 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
             }
         } else {
             mTwoPane = false;
+            getSupportActionBar().setElevation(0f);
         }
     }
 
