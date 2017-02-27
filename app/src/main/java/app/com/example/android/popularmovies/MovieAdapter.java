@@ -66,10 +66,9 @@ public class MovieAdapter extends CursorAdapter {
 
         ImageView imageView = (ImageView) view;
 
-
-        ViewGroup.LayoutParams layoutParams = imageView.getLayoutParams();
-        layoutParams.height = layoutParams.width * 3 / 2;
-        imageView.setLayoutParams(layoutParams);
+//        ViewGroup.LayoutParams layoutParams = imageView.getLayoutParams();
+//        layoutParams.height = layoutParams.width * 3 / 2;
+//        imageView.setLayoutParams(layoutParams);
 
         imageView.setImageDrawable(convertCursorRowToPosterImage(cursor));
     }

@@ -13,6 +13,8 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import static android.R.attr.bitmap;
+
 /**
  * Created by Mr.King on 2017/2/15 0015.
  */
@@ -23,8 +25,6 @@ public class Utility {
     public static Bitmap getImageFromUrl(String imageUrl){
 
         final String LOG_TAG = "getImageFromUrl";
-
-        Bitmap bitmap;
 
         HttpURLConnection urlConnection = null;
 
@@ -41,10 +41,11 @@ public class Utility {
                 return null;
             }
 
-            bitmap= BitmapFactory.decodeStream(inputStream);
+            Bitmap bitmap= BitmapFactory.decodeStream(inputStream);
+            Bitmap resizeBitmap = Bitmap.createScaledBitmap(bitmap, 120, 180, true);
             inputStream.close();
             Log.v("getImageFromUrl","url is: " + imageUrl);
-            return bitmap;
+            return resizeBitmap;
         } catch (IOException e) {
             Log.e(LOG_TAG, "Error ", e);
             return null;

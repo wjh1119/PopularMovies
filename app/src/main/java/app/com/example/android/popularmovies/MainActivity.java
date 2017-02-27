@@ -39,8 +39,8 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
                         .commit();
                 String mode = Utility.getPreferredMode(this);
                 this.onItemSelected(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
-                                mode, 1
-                        ));
+                        mode, 1
+                ));
             }
         } else {
             mTwoPane = false;
@@ -74,7 +74,7 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
     protected void onResume() {
         super.onResume();
         String mode = Utility.getPreferredMode( this );
-        Log.d(LOG_TAG,"mode is " + mode);
+        Log.d(LOG_TAG,"onResume");
         // update the mode in our second pane using the fragment manager
         if (mode != null && !mode.equals(mMode)) {
             MovieFragment mf = (MovieFragment)getSupportFragmentManager().findFragmentById(R.id.main_container);
