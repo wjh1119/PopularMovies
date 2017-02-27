@@ -23,7 +23,6 @@ public class MovieAdapter extends CursorAdapter {
     public MovieAdapter(Context context, Cursor c, int flags) {
         super(context, c, flags);
     }
-    int mDefItem;
 
     /*
         This is ported from FetchWeatherTask --- but now we go straight from the cursor to the

@@ -20,6 +20,10 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
 
     private String mMode;
 
+    private boolean mIsShowCollection;
+
+    private static MenuItem mShowCollectionItem;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         mMode = Utility.getPreferredMode(this);
@@ -52,6 +56,16 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+
+
+        mShowCollectionItem = menu.findItem(R.id.action_showCollection);
+
+        //判断该电影是否被收藏，并以此显示对应的菜单“收藏”或“取消收藏”。
+        if (mIsShowCollection) {
+            mShowCollectionItem.setTitle(getString(R.string.action_showCollection_showAllMovies));//“全部电影列表”
+        }else{
+            mShowCollectionItem.setTitle(getString(R.string.action_showCollection));//“我的收藏列表”
+        }
         return true;
     }
 
@@ -64,6 +78,34 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             startActivity(new Intent(this, SettingsActivity.class));
+            return true;
+        }
+        if (id == R.id.action_showCollection) {
+            if(!mIsShowCollection){//
+                item.setTitle(getString(R.string.action_showCollection_showAllMovies));//“全部电影列表”
+                mIsShowCollection = true;
+                MovieFragment mf = (MovieFragment)getSupportFragmentManager().findFragmentById(R.id.main_container);
+                if ( null != mf ) {
+                    mf.onIsShowCollectionChanged(mIsShowCollection);
+
+                }
+                DetailFragment df = (DetailFragment)getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
+                if ( null != df ) {
+                    df.onIsShowCollectionChanged(mIsShowCollection);
+                }
+            }else{
+                item.setTitle(getString(R.string.action_showCollection));//“我的收藏列表”
+                mIsShowCollection = false;
+                MovieFragment mf = (MovieFragment)getSupportFragmentManager().findFragmentById(R.id.main_container);
+                if ( null != mf ) {
+                    mf.onIsShowCollectionChanged(mIsShowCollection);
+
+                }
+                DetailFragment df = (DetailFragment)getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
+                if ( null != df ) {
+                    df.onIsShowCollectionChanged(mIsShowCollection);
+                }
+            }
             return true;
         }
 
@@ -79,8 +121,7 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
         if (mode != null && !mode.equals(mMode)) {
             MovieFragment mf = (MovieFragment)getSupportFragmentManager().findFragmentById(R.id.main_container);
             if ( null != mf ) {
-                mf.onModeChanged();
-
+                mf.onModeChanged(mIsShowCollection);
             }
             DetailFragment df = (DetailFragment)getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
             if ( null != df ) {

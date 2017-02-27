@@ -209,6 +209,9 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         }
     }
 
+    void onIsShowCollectionChanged(boolean isShowCollection){}
+
+
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 

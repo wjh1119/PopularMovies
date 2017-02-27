@@ -50,9 +50,6 @@ public class MovieFragment extends Fragment {
     private static final int MOVIE_LOADER = 0;
     private static final int COLLECTION_LOADER = 1;
 
-    private static boolean mIsShowCollection = false;
-    private static MenuItem mShowCollection;
-
     private GridView mGridView;
     private int mPosition = GridView.INVALID_POSITION;
 
@@ -142,15 +139,6 @@ public class MovieFragment extends Fragment {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.rankfragment, menu);
-
-        mShowCollection = menu.findItem(R.id.action_showCollection);
-
-        //判断该电影是否被收藏，并以此显示对应的菜单“收藏”或“取消收藏”。
-        if (mIsShowCollection) {
-            mShowCollection.setTitle(getString(R.string.action_showCollection_showAllMovies));//“全部电影列表”
-        }else{
-            mShowCollection.setTitle(getString(R.string.action_showCollection));//“我的收藏列表”
-        }
     }
 
     @Override
@@ -161,20 +149,6 @@ public class MovieFragment extends Fragment {
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
             updateMovie();
-            return true;
-        }
-        if (id == R.id.action_showCollection) {
-            if(item.getTitle().equals(getString(R.string.action_showCollection))){//“我的收藏列表”
-                item.setTitle(getString(R.string.action_showCollection_showAllMovies));//“全部电影列表”
-                getLoaderManager().destroyLoader(MOVIE_LOADER);
-                getLoaderManager().initLoader(COLLECTION_LOADER,null,new CollectionLoaderCallbacks());
-                mIsShowCollection = true;
-            }else{
-                item.setTitle(getString(R.string.action_showCollection));//“我的收藏列表”
-                getLoaderManager().destroyLoader(COLLECTION_LOADER);
-                getLoaderManager().initLoader(MOVIE_LOADER,null,new MoviesLoaderCallbacks());
-                mIsShowCollection = false;
-            }
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -261,13 +235,21 @@ public class MovieFragment extends Fragment {
         mMovieTask.execute();
     }
 
-    void onModeChanged( ) {
-        if (mIsShowCollection) {
+    void onModeChanged(boolean isShowCollection ) {
+        if (isShowCollection) {
             getLoaderManager().restartLoader(COLLECTION_LOADER, null, new CollectionLoaderCallbacks());
         }else{
             getLoaderManager().restartLoader(MOVIE_LOADER, null, new MoviesLoaderCallbacks());
         }
         Log.v(LOG_TAG,"mode changed");
+    }
+
+    void onIsShowCollectionChanged(boolean isShowCollection){
+        if(isShowCollection){//“我的收藏列表”
+            getLoaderManager().initLoader(COLLECTION_LOADER,null,new CollectionLoaderCallbacks());
+        }else{
+            getLoaderManager().initLoader(MOVIE_LOADER,null,new MoviesLoaderCallbacks());
+        }
     }
 
     @Override
