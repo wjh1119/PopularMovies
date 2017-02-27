@@ -37,7 +37,8 @@ public class MovieAdapter extends CursorAdapter {
     private BitmapDrawable convertCursorRowToPosterImage(Cursor cursor) {
         byte[] imageBlob = cursor.getBlob(MovieFragment.COL_POSTER_IMAGE);
         Bitmap bitmap = BitmapFactory.decodeByteArray(imageBlob, 0, imageBlob.length);
-        BitmapDrawable bitmapDrawable = new BitmapDrawable(bitmap);
+        Bitmap resizeBitmap = Bitmap.createScaledBitmap(bitmap, 120, 180, true);
+        BitmapDrawable bitmapDrawable = new BitmapDrawable(resizeBitmap);
         return bitmapDrawable;
     }
 
@@ -65,10 +66,6 @@ public class MovieAdapter extends CursorAdapter {
                 .getMetrics(displayMetrics);
 
         ImageView imageView = (ImageView) view;
-
-//        ViewGroup.LayoutParams layoutParams = imageView.getLayoutParams();
-//        layoutParams.height = layoutParams.width * 3 / 2;
-//        imageView.setLayoutParams(layoutParams);
 
         imageView.setImageDrawable(convertCursorRowToPosterImage(cursor));
     }
