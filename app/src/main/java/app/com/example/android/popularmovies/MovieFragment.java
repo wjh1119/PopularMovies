@@ -51,6 +51,7 @@ public class MovieFragment extends Fragment {
     private static final int COLLECTION_LOADER = 1;
 
     private static boolean mIsShowCollection = false;
+    private static MenuItem mShowCollection;
 
     private GridView mGridView;
     private int mPosition = GridView.INVALID_POSITION;
@@ -141,6 +142,15 @@ public class MovieFragment extends Fragment {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.rankfragment, menu);
+
+        mShowCollection = menu.findItem(R.id.action_showCollection);
+
+        //判断该电影是否被收藏，并以此显示对应的菜单“收藏”或“取消收藏”。
+        if (mIsShowCollection) {
+            mShowCollection.setTitle(getString(R.string.action_showCollection_showAllMovies));//“全部电影列表”
+        }else{
+            mShowCollection.setTitle(getString(R.string.action_showCollection));//“我的收藏列表”
+        }
     }
 
     @Override
@@ -182,6 +192,7 @@ public class MovieFragment extends Fragment {
         // Get a reference to the ListView, and attach this adapter to it.
         mGridView = (GridView) rootView.findViewById(R.id.grid_fragment);
         mGridView.setAdapter(mMovieAdapter);
+        //mMovieAdapter.setDefSelect(0);
 
         // We'll call our MainActivity
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -359,7 +370,6 @@ public class MovieFragment extends Fragment {
     }
 
     public interface Callback {
-
         public void onItemSelected(Uri dateUri);
     }
 }

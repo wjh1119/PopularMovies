@@ -4,8 +4,11 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import app.com.example.android.popularmovies.data.MovieContract;
 
 public class MainActivity extends ActionBarActivity implements MovieFragment.Callback{
 
@@ -22,9 +25,6 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
         mMode = Utility.getPreferredMode(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        getSupportFragmentManager().beginTransaction()
-//                .replace(R.id.main_container, new MovieFragment())
-//                .commit();
         if (findViewById(R.id.detail_container) != null) {
             // The detail container view will be present only in the large-screen layouts
             // (res/layout-sw600dp). If this view is present, then the activity should be
@@ -37,6 +37,10 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.detail_container, new DetailFragment(), DETAILFRAGMENT_TAG)
                         .commit();
+                String mode = Utility.getPreferredMode(this);
+                this.onItemSelected(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
+                                mode, 1
+                        ));
             }
         } else {
             mTwoPane = false;
@@ -70,7 +74,7 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
     protected void onResume() {
         super.onResume();
         String mode = Utility.getPreferredMode( this );
-
+        Log.d(LOG_TAG,"mode is " + mode);
         // update the mode in our second pane using the fragment manager
         if (mode != null && !mode.equals(mMode)) {
             MovieFragment mf = (MovieFragment)getSupportFragmentManager().findFragmentById(R.id.main_container);
@@ -80,7 +84,7 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
             }
             DetailFragment df = (DetailFragment)getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
             if ( null != df ) {
-                mf.onModeChanged();
+                df.onModeChanged(mode);
             }
             mMode = mode;
         }
@@ -102,10 +106,12 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.detail_container, fragment, DETAILFRAGMENT_TAG)
                     .commit();
+            Log.d("Click","mTwoPane is true ");
         } else {
             Intent intent = new Intent(this, DetailActivity.class)
                     .setData(contentUri);
             startActivity(intent);
+            Log.d("Click","mTwoPane is false ");
         }
     }
 }

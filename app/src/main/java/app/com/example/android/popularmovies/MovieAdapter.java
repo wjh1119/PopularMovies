@@ -23,6 +23,7 @@ public class MovieAdapter extends CursorAdapter {
     public MovieAdapter(Context context, Cursor c, int flags) {
         super(context, c, flags);
     }
+    int mDefItem;
 
     /*
         This is ported from FetchWeatherTask --- but now we go straight from the cursor to the
@@ -58,8 +59,6 @@ public class MovieAdapter extends CursorAdapter {
         // our view is pretty simple here --- just a text view
         // we'll keep the UI functional with a simple (and slow!) binding.
 
-        String posterPath = convertCursorRowToPosterPath(cursor);
-        //Log.v("adapter",posterPath);
         DisplayMetrics displayMetrics = new DisplayMetrics();
         ((Activity) context).getWindowManager()
                 .getDefaultDisplay()

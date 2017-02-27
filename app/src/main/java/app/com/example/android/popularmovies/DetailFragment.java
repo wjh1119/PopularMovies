@@ -26,7 +26,6 @@ import java.util.HashMap;
 import app.com.example.android.popularmovies.data.MovieContract;
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.Unbinder;
 
 /**
  * Created by Mr.King on 2017/2/17 0017.
@@ -51,8 +50,6 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     @BindView(R.id.movie_detail_videos_list)
     UnScrollListView videosListView;
     @BindView(R.id.movie_detail_image) ImageView imageView;
-
-    private Unbinder unbinder;
 
     private String mMovieId;
 
@@ -200,11 +197,14 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
 
     void onModeChanged( String mode ) {
         // replace the uri, since the mode has changed
+        Log.d(LOG_TAG,"mode is " + mode);
         Uri uri = mUri;
+        Log.d(LOG_TAG,"before uri is " + uri);
         if (null != uri) {
             int rank = MovieContract.MovieEntry.getRankFromUri(uri);
             Uri updatedUri = MovieContract.MovieEntry.buildMovieWithModeAndRankUri(mode, rank);
             mUri = updatedUri;
+            Log.d(LOG_TAG,"after uri is " + uri);
             getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
         }
     }
