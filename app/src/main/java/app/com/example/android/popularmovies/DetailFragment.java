@@ -53,7 +53,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
 
     private String mMovieId;
 
-    private String mIsCollect = null;
+    private String mIsCollect = "false";
 
     private View mView;
 
@@ -252,7 +252,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
                 mMovieId = (String) detailDataArray.get("movieId");
                 mIsCollect = (String) detailDataArray.get("isCollect");
                 //判断mCollectMenuItem是否加载
-                if (mCollectMenuItem != null) {
+                if (mCollectMenuItem != null && mIsCollect != null) {
                     if (mIsCollect.equals("true")){
                         //menuItem.setTitle(R.string.action_collect_cancel); //"取消收藏“
                         mCollectMenuItem.setIcon(R.drawable.ic_favorite_white_24dp);

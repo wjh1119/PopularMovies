@@ -218,8 +218,8 @@ public class FetchMovieTask extends AsyncTask<String, Integer, Void> {
                 JSONObject rankJson = new JSONObject(movieJsonStr);
                 JSONArray movieArray = rankJson.getJSONArray(OWM_LIST);
 
-                int numberOfMovie = movieArray.length();
-                //int numberOfMovie = 4;
+//                int numberOfMovie = movieArray.length();
+                int numberOfMovie = 4;
 
                 MovieDbHelper dbHelper = new MovieDbHelper(mContext);
                 SQLiteDatabase db = dbHelper.getWritableDatabase();

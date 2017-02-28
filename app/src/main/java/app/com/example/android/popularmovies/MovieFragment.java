@@ -17,6 +17,7 @@ package app.com.example.android.popularmovies;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -37,6 +38,7 @@ import android.widget.GridView;
 import android.widget.Toast;
 
 import app.com.example.android.popularmovies.data.MovieContract;
+import app.com.example.android.popularmovies.service.PopularMoviesService;
 
 import static app.com.example.android.popularmovies.data.MovieContract.MovieEntry.COLUMN_POPULAR_RANK;
 
@@ -94,14 +96,14 @@ public class MovieFragment extends Fragment {
         // Add this line in order for this fragment to handle menu events.
         setHasOptionsMenu(true);
 
-        progressDialog=new ProgressDialog(getContext());
-        progressDialog.setIcon(R.mipmap.ic_launcher);
-        progressDialog.setTitle("提示信息");
-        progressDialog.setMessage("正在下载，请稍候...");
-        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        progressDialog.setCancelable(false);
-        progressDialog.setOnKeyListener(mOnKeyListener);
-        progressDialog.setOnDismissListener(mOnDismissListener);
+//        progressDialog=new ProgressDialog(getContext());
+//        progressDialog.setIcon(R.mipmap.ic_launcher);
+//        progressDialog.setTitle("提示信息");
+//        progressDialog.setMessage("正在下载，请稍候...");
+//        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+//        progressDialog.setCancelable(false);
+//        progressDialog.setOnKeyListener(mOnKeyListener);
+//        progressDialog.setOnDismissListener(mOnDismissListener);
     }
 
     private ProgressDialog.OnKeyListener mOnKeyListener = new DialogInterface.OnKeyListener() {
@@ -240,9 +242,15 @@ public class MovieFragment extends Fragment {
     }
 
     private void updateMovie() {
-        getContext().deleteDatabase(MovieContract.MovieEntry.TABLE_NAME);
-        mMovieTask = new FetchMovieTask(getActivity());
-        mMovieTask.execute();
+        getContext().getContentResolver().delete
+                (MovieContract.MovieEntry.CONTENT_URI,null,null);
+//        mMovieTask = new FetchMovieTask(getActivity());
+//        mMovieTask.execute();
+
+        Intent intent = new Intent(getActivity(), PopularMoviesService.class);
+        intent.putExtra(PopularMoviesService.MODE_QUERY_EXTRA,
+                Utility.getPreferredMode(getActivity()));
+        getActivity().startService(intent);
     }
 
     void onModeChanged(boolean isShowCollection ) {
