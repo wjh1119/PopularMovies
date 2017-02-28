@@ -1,14 +1,15 @@
 package app.com.example.android.popularmovies.service;
 
 import android.app.IntentService;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.util.Log;
-import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -35,7 +36,6 @@ import static app.com.example.android.popularmovies.Utility.getImageFromUrl;
  */
 
 public class PopularMoviesService extends IntentService {
-    private ArrayAdapter<String> mMoiveAdapter;
     public static final String MODE_QUERY_EXTRA = "mqe";
     private final String LOG_TAG = PopularMoviesService.class.getSimpleName();
     public PopularMoviesService() {
@@ -406,4 +406,15 @@ public class PopularMoviesService extends IntentService {
         }
     }
 
+    public static class AlarmReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Intent sendIntent = new Intent(context, PopularMoviesService.class);
+            sendIntent.putExtra(PopularMoviesService.MODE_QUERY_EXTRA,
+                    intent.getStringExtra(PopularMoviesService.MODE_QUERY_EXTRA));
+            context.startService(sendIntent);
+
+        }
+    }
 }
