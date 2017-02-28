@@ -17,7 +17,6 @@ package app.com.example.android.popularmovies;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -38,7 +37,7 @@ import android.widget.GridView;
 import android.widget.Toast;
 
 import app.com.example.android.popularmovies.data.MovieContract;
-import app.com.example.android.popularmovies.service.PopularMoviesService;
+import app.com.example.android.popularmovies.sync.PopularMoviesSyncAdapter;
 
 import static app.com.example.android.popularmovies.data.MovieContract.MovieEntry.COLUMN_POPULAR_RANK;
 
@@ -247,10 +246,7 @@ public class MovieFragment extends Fragment {
 //        mMovieTask = new FetchMovieTask(getActivity());
 //        mMovieTask.execute();
 
-        Intent intent = new Intent(getActivity(), PopularMoviesService.class);
-        intent.putExtra(PopularMoviesService.MODE_QUERY_EXTRA,
-                Utility.getPreferredMode(getActivity()));
-        getActivity().startService(intent);
+        PopularMoviesSyncAdapter.syncImmediately(getActivity());
     }
 
     void onModeChanged(boolean isShowCollection ) {

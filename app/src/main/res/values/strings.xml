@@ -42,4 +42,7 @@
     <string name="movie_detail_reviews_itemtitle_text">评论</string>
     <string name="movie_detail_reviews_none_text">该电影暂无评论</string>
 
+     <!--SyncAdapter related -->
+    <string name="sync_account_type">PopularMovies.example.com</string>
+    <string name="content_authority">app.com.example.android.popularmovies</string>
 </resources>
