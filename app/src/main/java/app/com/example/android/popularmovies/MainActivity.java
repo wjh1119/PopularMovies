@@ -1,6 +1,7 @@
 package app.com.example.android.popularmovies;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -9,6 +10,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import app.com.example.android.popularmovies.data.MovieContract;
+
+import static app.com.example.android.popularmovies.MovieFragment.COL_POPULAR_RANK;
+import static app.com.example.android.popularmovies.MovieFragment.COL_TOPRATED_RANK;
 
 public class MainActivity extends ActionBarActivity implements MovieFragment.Callback{
 
@@ -41,10 +45,6 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.detail_container, new DetailFragment(), DETAILFRAGMENT_TAG)
                         .commit();
-                String mode = Utility.getPreferredMode(this);
-                this.onItemSelected(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
-                        mode, 1
-                ));
             }
         } else {
             mTwoPane = false;
@@ -87,11 +87,6 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
                 MovieFragment mf = (MovieFragment)getSupportFragmentManager().findFragmentById(R.id.main_container);
                 if ( null != mf ) {
                     mf.onIsShowCollectionChanged(mIsShowCollection);
-
-                }
-                DetailFragment df = (DetailFragment)getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
-                if ( null != df ) {
-                    df.onIsShowCollectionChanged(mIsShowCollection);
                 }
             }else{
                 item.setTitle(getString(R.string.action_showCollection));//“我的收藏列表”
@@ -100,10 +95,6 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
                 if ( null != mf ) {
                     mf.onIsShowCollectionChanged(mIsShowCollection);
 
-                }
-                DetailFragment df = (DetailFragment)getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
-                if ( null != df ) {
-                    df.onIsShowCollectionChanged(mIsShowCollection);
                 }
             }
             return true;
@@ -125,7 +116,7 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
             }
             DetailFragment df = (DetailFragment)getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
             if ( null != df ) {
-                df.onModeChanged(mode);
+                df.onModeChanged(mode,1);
             }
             mMode = mode;
         }
@@ -154,5 +145,26 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
             startActivity(intent);
             Log.d("Click","mTwoPane is false ");
         }
+    }
+
+    @Override
+    public void onShowDefalutItem(Cursor cursor) {
+        Log.d("onShowDefalutItem","R2: cursor is " + cursor);
+        if (cursor != null){
+            if (mMode.equals("popular")){
+                this.onItemSelected(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
+                        mMode, cursor.getInt(COL_POPULAR_RANK)));
+                Log.d("onShowDefalutItem","R3: mMode is " + mMode + " rank is : " + cursor.getInt(COL_POPULAR_RANK));
+            }else if (mMode.equals("toprated")){
+                this.onItemSelected(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
+                        mMode, cursor.getInt(COL_TOPRATED_RANK)));
+                Log.d("onShowDefalutItem","R3: mMode is " + mMode + " rank is : " + cursor.getInt(COL_TOPRATED_RANK));
+            }else{
+                Log.e("onShowDefalutItem","mode is wrong");
+            }
+        }else{
+            Log.d("onShowDefalutItem","error: cursor is " + cursor);
+        }
+
     }
 }

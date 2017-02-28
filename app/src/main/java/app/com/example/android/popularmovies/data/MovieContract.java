@@ -4,7 +4,6 @@ import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.net.Uri;
 import android.provider.BaseColumns;
-import android.util.Log;
 
 /**
  * Created by Mr.King on 2017/2/13 0013.
@@ -77,23 +76,17 @@ public class MovieContract {
 
         public static Uri buildMovieWithModeUri(
                 String mode) {
-            Log.v("buildUri","mode is " + mode + "uri is " + CONTENT_URI.buildUpon().appendPath(mode)
-                    .build().toString());
             return CONTENT_URI.buildUpon().appendPath(mode).build();
         }
 
         public static Uri buildMovieWithModeAndRankUri(
                 String mode, int rank) {
-            Log.v("intent build","rank is " + rank + "uri is " + CONTENT_URI.buildUpon().appendPath(mode)
-                    .appendPath(Integer.toString(rank)).build().toString());
             return CONTENT_URI.buildUpon().appendPath(mode)
                     .appendPath(Integer.toString(rank)).build();
         }
 
         public static Uri buildMovieWithModeAndCollectUri(
                 String mode) {
-            Log.v("intent build","uri is " + CONTENT_URI.buildUpon().appendPath(mode)
-                    .appendPath("c").build().toString());
             return CONTENT_URI.buildUpon().appendPath(mode)
                     .appendPath("c").build();
         }

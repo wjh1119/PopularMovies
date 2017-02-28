@@ -195,22 +195,15 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         }
     }
 
-    void onModeChanged( String mode ) {
+    void onModeChanged( String mode,int rank) {
         // replace the uri, since the mode has changed
-        Log.d(LOG_TAG,"mode is " + mode);
         Uri uri = mUri;
-        Log.d(LOG_TAG,"before uri is " + uri);
         if (null != uri) {
-            int rank = MovieContract.MovieEntry.getRankFromUri(uri);
             Uri updatedUri = MovieContract.MovieEntry.buildMovieWithModeAndRankUri(mode, rank);
             mUri = updatedUri;
-            Log.d(LOG_TAG,"after uri is " + uri);
             getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
         }
     }
-
-    void onIsShowCollectionChanged(boolean isShowCollection){}
-
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
@@ -234,8 +227,6 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
         if (!data.moveToFirst()) { return; }
-
-        Log.d(LOG_TAG,Thread.currentThread().getName());
         mData = data;
         //ButterKnife连接
         ButterKnife.bind(DetailFragment.this, mView);

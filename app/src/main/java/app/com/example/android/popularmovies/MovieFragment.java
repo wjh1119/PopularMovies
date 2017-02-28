@@ -200,6 +200,7 @@ public class MovieFragment extends Fragment {
             }
         });
 
+
         // If there's instance state, mine it for useful information.
         // The end-goal here is that the user never knows that turning their device sideways
         // does crazy lifecycle related things.  It should feel like some stuff stretched out,
@@ -210,6 +211,16 @@ public class MovieFragment extends Fragment {
             // swapout in onLoadFinished.
             mPosition = savedInstanceState.getInt(SELECTED_KEY);
         }
+        mGridView.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mGridView.getCount() > 0){
+                    ((Callback) getActivity())
+                            .onShowDefalutItem((Cursor) mGridView.getItemAtPosition(0));
+                    Log.d("onShowDefalutItem","R: cursor is " + mGridView.getItemAtPosition(0));
+                }
+            }
+        });
         return rootView;
     }
 
@@ -231,7 +242,6 @@ public class MovieFragment extends Fragment {
     private void updateMovie() {
         getContext().deleteDatabase(MovieContract.MovieEntry.TABLE_NAME);
         mMovieTask = new FetchMovieTask(getActivity());
-        //mMovieTask.cancel(false);
         mMovieTask.execute();
     }
 
@@ -241,15 +251,25 @@ public class MovieFragment extends Fragment {
         }else{
             getLoaderManager().restartLoader(MOVIE_LOADER, null, new MoviesLoaderCallbacks());
         }
-        Log.v(LOG_TAG,"mode changed");
+        mGridView.smoothScrollToPosition(0);
     }
 
     void onIsShowCollectionChanged(boolean isShowCollection){
         if(isShowCollection){//“我的收藏列表”
-            getLoaderManager().initLoader(COLLECTION_LOADER,null,new CollectionLoaderCallbacks());
+            getLoaderManager().restartLoader(COLLECTION_LOADER,null,new CollectionLoaderCallbacks());
         }else{
-            getLoaderManager().initLoader(MOVIE_LOADER,null,new MoviesLoaderCallbacks());
+            getLoaderManager().restartLoader(MOVIE_LOADER,null,new MoviesLoaderCallbacks());
         }
+        mGridView.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mGridView.getCount() > 0){
+                    ((Callback) getActivity())
+                            .onShowDefalutItem((Cursor) mGridView.getItemAtPosition(0));
+                    Log.d("onShowDefalutItem","R: cursor is " + mGridView.getItemAtPosition(0));
+                }
+            }
+        });
     }
 
     @Override
@@ -267,6 +287,7 @@ public class MovieFragment extends Fragment {
         @Override
         public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
             String mode = Utility.getPreferredMode(getActivity());
+            Log.d(LOG_TAG,"onCreateLoader mode is " + mode);
 
             String sortOrder = MovieContract.MovieEntry.COLUMN_ID + " ASC";
             if (mode.equals("popular")){
@@ -351,7 +372,8 @@ public class MovieFragment extends Fragment {
     }
 
     public interface Callback {
-        public void onItemSelected(Uri dateUri);
+        void onItemSelected(Uri contentUri);
+        void onShowDefalutItem(Cursor cursor);
     }
 }
 
