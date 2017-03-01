@@ -3,7 +3,6 @@ package app.com.example.android.popularmovies;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.AsyncTask;
-import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -40,7 +39,6 @@ public class FetchReviewsTask extends AsyncTask<Cursor, Void, ArrayList<HashMap>
 
         ArrayList<HashMap> reviewsDataArray = new ArrayList<>();
         mData = params[0];
-        Log.d(LOG_TAG,"mdata:" + mData);
         try {
 
             String reviewsJsonStr = mData.getString(COL_REVIEWS);

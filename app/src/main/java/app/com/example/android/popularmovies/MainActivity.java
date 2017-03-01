@@ -10,6 +10,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import app.com.example.android.popularmovies.data.MovieContract;
+import app.com.example.android.popularmovies.sync.PopularMoviesSyncAdapter;
 
 import static app.com.example.android.popularmovies.MovieFragment.COL_POPULAR_RANK;
 import static app.com.example.android.popularmovies.MovieFragment.COL_TOPRATED_RANK;
@@ -17,7 +18,6 @@ import static app.com.example.android.popularmovies.MovieFragment.COL_TOPRATED_R
 public class MainActivity extends ActionBarActivity implements MovieFragment.Callback{
 
     private final String LOG_TAG = MainActivity.class.getSimpleName();
-    // final String MOVIEFRAGMENT_TAG = "MFTAG";
     private static final String DETAILFRAGMENT_TAG = "DFTAG";
 
     private boolean mTwoPane;
@@ -50,6 +50,9 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
             mTwoPane = false;
             getSupportActionBar().setElevation(0f);
         }
+
+        PopularMoviesSyncAdapter.initializeSyncAdapter(this);
+        Log.d(LOG_TAG,"initializeSyncAdapter");
     }
 
     @Override

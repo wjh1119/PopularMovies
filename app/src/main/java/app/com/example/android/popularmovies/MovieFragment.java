@@ -16,7 +16,6 @@
 package app.com.example.android.popularmovies;
 
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -25,7 +24,6 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -56,7 +54,6 @@ public class MovieFragment extends Fragment {
 
     private static final String SELECTED_KEY = "selected_position";
 
-    FetchMovieTask mMovieTask;
     // For the forecast view we're showing only a small subset of the stored data.
     // Specify the columns we need.
     public static final String[] MOVIE_COLUMNS = {
@@ -94,39 +91,7 @@ public class MovieFragment extends Fragment {
         super.onCreate(savedInstanceState);
         // Add this line in order for this fragment to handle menu events.
         setHasOptionsMenu(true);
-
-//        progressDialog=new ProgressDialog(getContext());
-//        progressDialog.setIcon(R.mipmap.ic_launcher);
-//        progressDialog.setTitle("提示信息");
-//        progressDialog.setMessage("正在下载，请稍候...");
-//        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-//        progressDialog.setCancelable(false);
-//        progressDialog.setOnKeyListener(mOnKeyListener);
-//        progressDialog.setOnDismissListener(mOnDismissListener);
     }
-
-    private ProgressDialog.OnKeyListener mOnKeyListener = new DialogInterface.OnKeyListener() {
-        @Override
-        public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
-            //当用户按下返回键(有可能是虚拟键，也有可能是实体键，总之是返回键)
-            if (keyCode == KeyEvent.KEYCODE_BACK) {
-                dialog.dismiss();
-                return true;
-            }
-            return false;
-        }
-    };
-
-    private ProgressDialog.OnDismissListener mOnDismissListener = new DialogInterface.OnDismissListener() {
-        @Override
-        public void onDismiss(DialogInterface dialog) {
-            //在这里对你的后台任务(AsyncTask)进行处理,及提示相关的语句(已终止下载等等)
-            if (mMovieTask!=null){
-                mMovieTask.cancel(true);
-                mMovieTask = null;
-            }
-        }
-    };
 
     @Override
     public void onStop() {
@@ -243,8 +208,6 @@ public class MovieFragment extends Fragment {
     private void updateMovie() {
         getContext().getContentResolver().delete
                 (MovieContract.MovieEntry.CONTENT_URI,null,null);
-//        mMovieTask = new FetchMovieTask(getActivity());
-//        mMovieTask.execute();
 
         PopularMoviesSyncAdapter.syncImmediately(getActivity());
     }

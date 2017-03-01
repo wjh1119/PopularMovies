@@ -53,7 +53,7 @@
                 android:value="app.com.example.android.popularmovies.MainActivity" />
         </activity>
         <provider
-            android:authorities="app.com.example.android.popularmovies"
+            android:authorities="@string/content_authority"
             android:name=".data.MovieProvider"
             android:exported="false"
             android:syncable="true" />
