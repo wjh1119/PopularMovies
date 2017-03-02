@@ -2,11 +2,15 @@ package app.com.example.android.popularmovies.sync;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.SyncRequest;
 import android.content.SyncResult;
 import android.database.Cursor;
@@ -15,6 +19,9 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -30,8 +37,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import app.com.example.android.popularmovies.BuildConfig;
+import app.com.example.android.popularmovies.MainActivity;
 import app.com.example.android.popularmovies.NetworkUtil;
 import app.com.example.android.popularmovies.R;
+import app.com.example.android.popularmovies.Utility;
 import app.com.example.android.popularmovies.data.MovieContract;
 import app.com.example.android.popularmovies.data.MovieDbHelper;
 
@@ -41,8 +50,25 @@ import static app.com.example.android.popularmovies.Utility.getImageFromUrl;
 public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
     public final String LOG_TAG = PopularMoviesSyncAdapter.class.getSimpleName();
     // Interval at which to sync with the weather, in seconds.
-    public static final int SYNC_INTERVAL = 60;  // 3 hours
+    public static final int SYNC_INTERVAL = 10;  // 3 hours
     public static final int SYNC_FLEXTIME = SYNC_INTERVAL/3;
+
+    private static final long DAY_IN_MILLIS = 1000 * 60 * 60 * 24;
+    private static final int WEATHER_NOTIFICATION_ID = 3004;
+
+
+    private static final String[] NOTIFY_MOVIE_PROJECTION = new String[] {
+            MovieContract.MovieEntry.COLUMN_ID,
+            MovieContract.MovieEntry.COLUMN_TITLE,
+            MovieContract.MovieEntry.COLUMN_RELEASE_DATE,
+            MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE,
+    };
+
+    // these indices must match the projection
+    private static final int INDEX_ID = 0;
+    private static final int INDEX_TITLE = 1;
+    private static final int INDEX_RELEASE_DATE = 2;
+    private static final int INDEX_VOTE_AVERAGE= 3;
 
     public PopularMoviesSyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
@@ -62,6 +88,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
             Log.v(LOG_TAG,"getMovieData toprated from " + movieJsonStrForToprated);
             getMovieDataFromJson(movieJsonStrForPopular,"popular");
             Log.v(LOG_TAG,"getMovieData popular from " + movieJsonStrForPopular);
+            notifyMovie();
         }catch (JSONException e) {
             Log.e(LOG_TAG, e.getMessage(), e);
             e.printStackTrace();
@@ -501,5 +528,80 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
 
     public static void initializeSyncAdapter(Context context) {
         getSyncAccount(context);
+    }
+
+    private void notifyMovie() {
+        Context context = getContext();
+        //checking the last update and notify if it' the first of the day
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String displayNotificationsKey = context.getString(R.string.pref_enable_notifications_key);
+        boolean displayNotifications = prefs.getBoolean(displayNotificationsKey,
+        Boolean.parseBoolean(context.getString(R.string.pref_enable_notifications_default)));
+
+        if ( displayNotifications ) {
+            String lastNotificationKey = context.getString(R.string.pref_last_notification);
+            long lastSync = prefs.getLong(lastNotificationKey, 0);
+
+            if (System.currentTimeMillis() - lastSync >= DAY_IN_MILLIS) {
+                // Last sync was more than 1 day ago, let's send a notification with the weather.
+                String mode = Utility.getPreferredMode(context);
+
+                Uri movieUri = MovieContract.MovieEntry.buildMovieWithModeAndRankUri(mode, 1);
+
+                // we'll query our contentProvider, as always
+                Cursor cursor = context.getContentResolver().query(movieUri, NOTIFY_MOVIE_PROJECTION, null, null, null);
+
+                if (cursor.moveToFirst()) {
+                    int movieId = cursor.getInt(INDEX_ID);
+                    String movieTitle = cursor.getString(INDEX_TITLE);
+                    String releaseDate = cursor.getString(INDEX_RELEASE_DATE);
+                    String voteAverage = cursor.getString(INDEX_VOTE_AVERAGE);
+
+                    String title = context.getString(R.string.app_name);
+
+                    // Define the text of the forecast.
+                    String contentText = String.format(context.getString(R.string.notification),
+                            movieTitle,
+                            releaseDate,
+                            voteAverage);
+
+                    // NotificationCompatBuilder is a very convenient way to build backward-compatible
+                    // notifications.  Just throw in some data.
+                    NotificationCompat.Builder mBuilder =
+                            new NotificationCompat.Builder(getContext())
+                                    .setSmallIcon(R.mipmap.ic_launcher)
+                                    .setContentTitle(title)
+                                    .setContentText(contentText);
+
+                    // Make something interesting happen when the user clicks on the notification.
+                    // In this case, opening the app is sufficient.
+                    Intent resultIntent = new Intent(context, MainActivity.class);
+
+                    // The stack builder object will contain an artificial back stack for the
+                    // started Activity.
+                    // This ensures that navigating backward from the Activity leads out of
+                    // your application to the Home screen.
+                    TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+                    stackBuilder.addNextIntent(resultIntent);
+                    PendingIntent resultPendingIntent =
+                            stackBuilder.getPendingIntent(
+                                    0,
+                                    PendingIntent.FLAG_UPDATE_CURRENT
+                            );
+                    mBuilder.setContentIntent(resultPendingIntent);
+
+                    NotificationManager mNotificationManager =
+                            (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                    // WEATHER_NOTIFICATION_ID allows you to update the notification later on.
+                    mNotificationManager.notify(WEATHER_NOTIFICATION_ID, mBuilder.build());
+
+                    //refreshing last sync
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putLong(lastNotificationKey, System.currentTimeMillis());
+                    editor.commit();
+                }
+                cursor.close();
+            }
+        }
     }
 }
