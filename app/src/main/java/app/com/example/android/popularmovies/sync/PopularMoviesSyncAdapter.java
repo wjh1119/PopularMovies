@@ -50,7 +50,7 @@ import static app.com.example.android.popularmovies.Utility.getImageFromUrl;
 public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
     public final String LOG_TAG = PopularMoviesSyncAdapter.class.getSimpleName();
     // Interval at which to sync with the weather, in seconds.
-    public static final int SYNC_INTERVAL = 10;  // 3 hours
+    public static final int SYNC_INTERVAL = 60;  // 3 hours
     public static final int SYNC_FLEXTIME = SYNC_INTERVAL/3;
 
     private static final long DAY_IN_MILLIS = 1000 * 60 * 60 * 24;
@@ -84,6 +84,8 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
         String movieJsonStrForPopular = getMovieJsonStr("popular");
         String movieJsonStrForToprated = getMovieJsonStr("toprated");
         try{
+            setMovieRankToZero();
+            Log.d(LOG_TAG,"set rank of movies to 0");
             getMovieDataFromJson(movieJsonStrForToprated,"toprated");
             Log.v(LOG_TAG,"getMovieData toprated from " + movieJsonStrForToprated);
             getMovieDataFromJson(movieJsonStrForPopular,"popular");
@@ -206,102 +208,19 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                 JSONObject rankJson = new JSONObject(movieJsonStr);
                 JSONArray movieArray = rankJson.getJSONArray(OWM_LIST);
 
-//                int numberOfMovie = movieArray.length();
-                int numberOfMovie = 4;
+                int numberOfMovie = movieArray.length();
+//                int numberOfMovie = 4;
 
                 MovieDbHelper dbHelper = new MovieDbHelper(getContext());
                 SQLiteDatabase db = dbHelper.getWritableDatabase();
                 // Insert the new movie information into the database
                 for(int i = 0; i < numberOfMovie; i++) {
 
-                    ContentValues movieValues = new ContentValues();
-
-                    //MovieEntry所需要的数据
-                    String posterPath;
-                    Bitmap posterImage;
-                    String adult;
-                    String overview;
-                    String releaseDate;
-                    int id;
-                    String reviews;
-                    String videos;
-                    String originalTitle;
-                    String originalLanguage;
-                    String title;
-                    float popularity;
-                    int voteCount;
-                    String video;
-                    float voteAverage;
-                    String collect;
-                    int runtime;
-                    int popularRank;
-                    int topratedRank;
                     // 根据位置获取电影信息
                     JSONObject movieInfo = movieArray.getJSONObject(i);
 
-                    //获取电影海报地址
-                    posterPath = "https://image.tmdb.org/t/p/w185" + movieInfo.getString(OWM_POSTER_PATH);
-
-                    posterImage = getImageFromUrl(posterPath);
-
-                    adult = movieInfo.getString(OWM_ADULT);
-                    overview = movieInfo.getString(OWM_OVERVIEW);
-                    releaseDate = movieInfo.getString(OWM_RELEASE_DATE);
-
                     //根据电影id查询电影是否在数据表中
-                    id = Integer.parseInt(movieInfo.getString(OWM_ID));
-
-                    originalTitle = movieInfo.getString(OWM_ORIGINAL_TITLE);
-                    originalLanguage = movieInfo.getString(OWM_ORIGINAL_LANGUAGE);
-                    title =movieInfo.getString(OWM_TITLE);
-                    popularity = Float.parseFloat(movieInfo.getString(OWM_POPULARITY));
-                    voteCount = Integer.parseInt(movieInfo.getString(OWM_VOTE_COUNT));
-                    video = movieInfo.getString(OWM_VIDEO);
-                    voteAverage = Float.parseFloat(movieInfo.getString(OWM_VOTE_AVERAGE));
-                    collect = "false";
-
-                    //获取含runtime的Json，并提取出runtime
-                    String runtimeJson = getJsonStrFromId(id,"runtime");
-                    JSONObject movieJson = new JSONObject(runtimeJson);
-                    runtime = movieJson.getInt("runtime");
-
-                    //获取reviews，videos的JsonString
-                    reviews = getJsonStrFromId(id,"reviews");
-                    videos = getJsonStrFromId(id,"videos");
-
-                    popularRank = 0;
-                    topratedRank = 0;
-                    if (mode.equals("popular")){
-                        popularRank = i+1;
-                        topratedRank = 0;
-                    }else if (mode.equals("toprated")){
-                        popularRank = 0;
-                        topratedRank = i+1;
-                    }else{
-                        Log.e(LOG_TAG,"mode is wrong");
-                    }
-
-
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_POSTER_PATH, posterPath);
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_POSTER_IMAGE,bitmapToByte(posterImage));
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_ADULT, adult);
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_OVERVIEW, overview);
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, releaseDate);
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_ID, id);
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE, originalTitle);
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_LANGUAGE, originalLanguage);
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_TITLE, title);
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_POPULARITY, popularity);
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_VIDEO, video);
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_VOTE_COUNT, voteCount);
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE, voteAverage);
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_COLLECT, collect);
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_RUNTIME, runtime);
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_POPULAR_RANK, popularRank);
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_TOPRATED_RANK, topratedRank);
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_REVIEWS, reviews);
-                    movieValues.put(MovieContract.MovieEntry.COLUMN_VIDEOS, videos);
-
+                    int id = Integer.parseInt(movieInfo.getString(OWM_ID));
                     String idSelection = MovieContract.MovieEntry.TABLE_NAME+
                             "." + MovieContract.MovieEntry.COLUMN_ID + " = ? ";
                     String[] idSelectionArgs = new String[]{Integer.toString(id)};
@@ -315,38 +234,104 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                             null  // sort order
                     );
 
-                    if (getCursorById.moveToFirst() == false)
+                    if (!getCursorById.moveToFirst())
                     {
+                        ContentValues movieValues = new ContentValues();
+
+                        //MovieEntry所需要的数据
+                        String posterPath;
+                        Bitmap posterImage;
+                        String adult;
+                        String overview;
+                        String releaseDate;
+                        String reviews;
+                        String videos;
+                        String originalTitle;
+                        String originalLanguage;
+                        String title;
+                        float popularity;
+                        int voteCount;
+                        String video;
+                        float voteAverage;
+                        String collect;
+                        int runtime;
+                        int popularRank;
+                        int topratedRank;
+
+                        //获取电影海报地址
+                        posterPath = "https://image.tmdb.org/t/p/w185" + movieInfo.getString(OWM_POSTER_PATH);
+
+                        posterImage = getImageFromUrl(posterPath);
+
+                        adult = movieInfo.getString(OWM_ADULT);
+                        overview = movieInfo.getString(OWM_OVERVIEW);
+                        releaseDate = movieInfo.getString(OWM_RELEASE_DATE);
+
+                        originalTitle = movieInfo.getString(OWM_ORIGINAL_TITLE);
+                        originalLanguage = movieInfo.getString(OWM_ORIGINAL_LANGUAGE);
+                        title =movieInfo.getString(OWM_TITLE);
+                        popularity = Float.parseFloat(movieInfo.getString(OWM_POPULARITY));
+                        voteCount = Integer.parseInt(movieInfo.getString(OWM_VOTE_COUNT));
+                        video = movieInfo.getString(OWM_VIDEO);
+                        voteAverage = Float.parseFloat(movieInfo.getString(OWM_VOTE_AVERAGE));
+                        collect = "false";
+
+                        //获取含runtime的Json，并提取出runtime
+                        String runtimeJson = getJsonStrFromId(id,"runtime");
+                        JSONObject movieJson = new JSONObject(runtimeJson);
+                        runtime = movieJson.getInt("runtime");
+
+                        //获取reviews，videos的JsonString
+                        reviews = getJsonStrFromId(id,"reviews");
+                        videos = getJsonStrFromId(id,"videos");
+
+                        popularRank = mode.equals("popular")?i+1:0;
+                        topratedRank = mode.equals("popular")?0:i+1;
+
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_POSTER_PATH, posterPath);
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_POSTER_IMAGE,bitmapToByte(posterImage));
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_ADULT, adult);
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_OVERVIEW, overview);
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, releaseDate);
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_ID, id);
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE, originalTitle);
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_LANGUAGE, originalLanguage);
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_TITLE, title);
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_POPULARITY, popularity);
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_VIDEO, video);
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_VOTE_COUNT, voteCount);
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE, voteAverage);
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_COLLECT, collect);
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_RUNTIME, runtime);
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_POPULAR_RANK, popularRank);
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_TOPRATED_RANK, topratedRank);
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_REVIEWS, reviews);
+                        movieValues.put(MovieContract.MovieEntry.COLUMN_VIDEOS, videos);
                         getContext().getContentResolver().insert(MovieContract.MovieEntry.CONTENT_URI,movieValues);
-                    }else{
+                        Log.v(LOG_TAG,"insert movieValues: " + movieValues);
+
+                        getCursorById.close();
+                    }else {
 
                         //如果id已存在，更新对应排序模式的排名
-                        ContentValues modeValue = new ContentValues();
-                        if (mode.equals("popular")){
-                            modeValue.put(MovieContract.MovieEntry.COLUMN_POPULAR_RANK, popularRank);
-                        }else if (mode.equals("toprated")){
-                            modeValue.put(MovieContract.MovieEntry.COLUMN_TOPRATED_RANK, topratedRank);
-                        }else{
-                            Log.d(LOG_TAG,"mode is wrong");
+                        ContentValues rankValue = new ContentValues();
+                        if (mode.equals("popular")) {
+                            rankValue.put(MovieContract.MovieEntry.COLUMN_POPULAR_RANK, i + 1);
+                        } else if (mode.equals("toprated")) {
+                            rankValue.put(MovieContract.MovieEntry.COLUMN_TOPRATED_RANK, i + 1);
+                        } else {
+                            Log.d(LOG_TAG, "mode is wrong");
                         }
 
                         getContext().getContentResolver().update(MovieContract.MovieEntry.CONTENT_URI,
-                                modeValue,idSelection,idSelectionArgs);
+                                rankValue, idSelection, idSelectionArgs);
+                        Log.d(LOG_TAG,"movie is already in database,app only updates its rank");
                     }
-
-                    Log.v(LOG_TAG,"insert movieValues: " + movieValues);
                 }
-                Log.v(LOG_TAG,"fetch data from internet");
-//            int inserted = 0;
-//            // add to database
-//            if ( cVVector.size() > 0 ) {
-//                ContentValues[] cvArray = new ContentValues[cVVector.size()];
-//                cVVector.toArray(cvArray);
-//                inserted = getContext().getContentResolver().bulkInsert(MovieContract.MovieEntry.CONTENT_URI, cvArray);
-//            }
-
+                db.close();
+                Log.d(LOG_TAG,"fetch data from internet");
             }else{
-                Log.v(LOG_TAG,"Json is null");
+                Log.d(LOG_TAG,"fail to fetch data ,because Json is null");
             }
         } catch (JSONException e) {
             Log.e(LOG_TAG, e.getMessage(), e);
@@ -391,7 +376,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                     .build();
 
             URL url = new URL(builtPopularUri.toString());
-            Log.v(LOG_TAG,"url is " + url);
+            Log.d(LOG_TAG,"url is " + url);
 
             // Create the request to OpenWeatherMap, and open the connection
             urlConnection = (HttpURLConnection) url.openConnection();
@@ -418,7 +403,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                 return null;
             }
             movieJsonStr = buffer.toString();
-            Log.v(LOG_TAG,dataName + "JsonStr is " + movieJsonStr);
+            Log.d(LOG_TAG,dataName + "JsonStr is " + movieJsonStr);
             return movieJsonStr;
         } catch (IOException e) {
             Log.e(LOG_TAG, "Error ", e);
@@ -437,6 +422,36 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                 }
             }
         }
+    }
+
+    //将排名归零，即无排名
+    private void setMovieRankToZero(){
+        MovieDbHelper dbHelper = new MovieDbHelper(getContext());
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        Cursor cursor = db.query(
+                MovieContract.MovieEntry.TABLE_NAME,  // Table to Query
+                null, // leaving "columns" null just returns all the columns.
+                null, // cols for "where" clause
+                null, // values for "where" clause
+                null, // columns to group by
+                null, // columns to filter by row groups
+                null  // sort order
+        );
+
+        if(cursor!=null&&cursor.moveToFirst()) {
+            ContentValues rankValue = new ContentValues();
+            rankValue.put(MovieContract.MovieEntry.COLUMN_POPULAR_RANK, 0);
+            rankValue.put(MovieContract.MovieEntry.COLUMN_TOPRATED_RANK, 0);
+
+            while (!cursor.isAfterLast()) {
+
+                getContext().getContentResolver().update(MovieContract.MovieEntry.CONTENT_URI,
+                        rankValue,null,null);
+                cursor.moveToNext();
+            }
+            cursor.close();
+        }
+        db.close();
     }
 
     /**

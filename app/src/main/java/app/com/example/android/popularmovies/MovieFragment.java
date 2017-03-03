@@ -177,13 +177,15 @@ public class MovieFragment extends Fragment {
             // swapout in onLoadFinished.
             mPosition = savedInstanceState.getInt(SELECTED_KEY);
         }
+
+        //当加载电影列表，通过MainActivity通知detailfragemnt显示第一项内容。
         mGridView.post(new Runnable() {
             @Override
             public void run() {
                 if (mGridView.getCount() > 0){
                     ((Callback) getActivity())
-                            .onShowDefalutItem((Cursor) mGridView.getItemAtPosition(0));
-                    Log.d("onShowDefalutItem","R: cursor is " + mGridView.getItemAtPosition(0));
+                            .onListChanged((Cursor) mGridView.getItemAtPosition(0));
+                    Log.d("onListChanged","R: cursor is " + mGridView.getItemAtPosition(0));
                 }
             }
         });
@@ -206,9 +208,6 @@ public class MovieFragment extends Fragment {
     }
 
     private void updateMovie() {
-        getContext().getContentResolver().delete
-                (MovieContract.MovieEntry.CONTENT_URI,null,null);
-
         PopularMoviesSyncAdapter.syncImmediately(getActivity());
     }
 
@@ -223,8 +222,10 @@ public class MovieFragment extends Fragment {
 
     void onIsShowCollectionChanged(boolean isShowCollection){
         if(isShowCollection){//“我的收藏列表”
+            getLoaderManager().destroyLoader(MOVIE_LOADER);
             getLoaderManager().restartLoader(COLLECTION_LOADER,null,new CollectionLoaderCallbacks());
         }else{
+            getLoaderManager().destroyLoader(COLLECTION_LOADER);
             getLoaderManager().restartLoader(MOVIE_LOADER,null,new MoviesLoaderCallbacks());
         }
         mGridView.post(new Runnable() {
@@ -232,8 +233,8 @@ public class MovieFragment extends Fragment {
             public void run() {
                 if (mGridView.getCount() > 0){
                     ((Callback) getActivity())
-                            .onShowDefalutItem((Cursor) mGridView.getItemAtPosition(0));
-                    Log.d("onShowDefalutItem","R: cursor is " + mGridView.getItemAtPosition(0));
+                            .onListChanged((Cursor) mGridView.getItemAtPosition(0));
+                    Log.d("onListChanged","collectchanged: cursor is " + mGridView.getItemAtPosition(0));
                 }
             }
         });
@@ -282,6 +283,11 @@ public class MovieFragment extends Fragment {
         public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
             mMovieAdapter.swapCursor(cursor);
             Log.v("onLoadFinished", cursor.toString());
+            if (!cursor.moveToFirst()){
+                ((Callback) getActivity()).onNoItemInList();
+            }else{
+                ((Callback) getActivity()).onListChanged(cursor);
+            }
             if (mPosition != GridView.INVALID_POSITION) {
                 // If we don't need to restart the loader, and there's a desired position to restore
                 // to, do so now.
@@ -324,7 +330,12 @@ public class MovieFragment extends Fragment {
         @Override
         public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
             mMovieAdapter.swapCursor(cursor);
-            Log.v("onLoadFinished", cursor.toString());
+            Log.d("onLoadFinished","onLoadFinished" );
+            if (!cursor.moveToFirst()){
+                ((Callback) getActivity()).onNoItemInList();
+            }else{
+                ((Callback) getActivity()).onListChanged(cursor);
+            }
             if (mPosition != GridView.INVALID_POSITION) {
                 // If we don't need to restart the loader, and there's a desired position to restore
                 // to, do so now.
@@ -340,7 +351,8 @@ public class MovieFragment extends Fragment {
 
     public interface Callback {
         void onItemSelected(Uri contentUri);
-        void onShowDefalutItem(Cursor cursor);
+        void onListChanged(Cursor cursor);
+        void onNoItemInList();
     }
 }
 

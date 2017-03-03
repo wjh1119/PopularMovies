@@ -24,15 +24,6 @@ public class MovieAdapter extends CursorAdapter {
         super(context, c, flags);
     }
 
-    /*
-        This is ported from FetchWeatherTask --- but now we go straight from the cursor to the
-        string.
-     */
-    private String convertCursorRowToPosterPath(Cursor cursor) {
-        String posterPath = cursor.getString(MovieFragment.COL_POSTER_PATH);
-        return posterPath;
-    }
-
     private BitmapDrawable convertCursorRowToPosterImage(Cursor cursor) {
         byte[] imageBlob = cursor.getBlob(MovieFragment.COL_POSTER_IMAGE);
         Bitmap bitmap = BitmapFactory.decodeByteArray(imageBlob, 0, imageBlob.length);

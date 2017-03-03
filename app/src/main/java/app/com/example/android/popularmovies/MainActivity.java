@@ -4,21 +4,19 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import app.com.example.android.popularmovies.data.MovieContract;
 import app.com.example.android.popularmovies.sync.PopularMoviesSyncAdapter;
-
-import static app.com.example.android.popularmovies.MovieFragment.COL_POPULAR_RANK;
-import static app.com.example.android.popularmovies.MovieFragment.COL_TOPRATED_RANK;
 
 public class MainActivity extends ActionBarActivity implements MovieFragment.Callback{
 
     private final String LOG_TAG = MainActivity.class.getSimpleName();
     private static final String DETAILFRAGMENT_TAG = "DFTAG";
+    private static final String HINTFRAGMENT_TAG = "HFTAG";
 
     private boolean mTwoPane;
 
@@ -42,9 +40,16 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
             // adding or replacing the detail fragment using a
             // fragment transaction.
             if (savedInstanceState == null) {
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.detail_container, new DetailFragment(), DETAILFRAGMENT_TAG)
+                FragmentManager manager = getSupportFragmentManager();
+//                manager.beginTransaction()
+//                        .replace(R.id.detail_container, new HintFragment(), HINTFRAGMENT_TAG)
+//                        .add(R.id.detail_container, new DetailFragment(), DETAILFRAGMENT_TAG)
+//                        .hide(manager.findFragmentByTag(DETAILFRAGMENT_TAG))
+//                        .commit();
+                manager.beginTransaction()
+                        .replace(R.id.detail_container, new HintFragment(), HINTFRAGMENT_TAG)
                         .commit();
+
             }
         } else {
             mTwoPane = false;
@@ -91,14 +96,20 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
                 if ( null != mf ) {
                     mf.onIsShowCollectionChanged(mIsShowCollection);
                 }
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.detail_container, new HintFragment(), HINTFRAGMENT_TAG)
+                        .commit();
+
             }else{
                 item.setTitle(getString(R.string.action_showCollection));//“我的收藏列表”
                 mIsShowCollection = false;
                 MovieFragment mf = (MovieFragment)getSupportFragmentManager().findFragmentById(R.id.main_container);
                 if ( null != mf ) {
                     mf.onIsShowCollectionChanged(mIsShowCollection);
-
                 }
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.detail_container, new HintFragment(), HINTFRAGMENT_TAG)
+                        .commit();
             }
             return true;
         }
@@ -117,10 +128,10 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
             if ( null != mf ) {
                 mf.onModeChanged(mIsShowCollection);
             }
-            DetailFragment df = (DetailFragment)getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
-            if ( null != df ) {
-                df.onModeChanged(mode,1);
-            }
+            getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.detail_container, new HintFragment(), HINTFRAGMENT_TAG)
+                        .commit();
+
             mMode = mode;
         }
 
@@ -129,19 +140,7 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
     @Override
     public void onItemSelected(Uri contentUri) {
         if (mTwoPane) {
-            // In two-pane mode, show the detail view in this activity by
-            // adding or replacing the detail fragment using a
-            // fragment transaction.
-            Bundle args = new Bundle();
-            args.putParcelable(DetailFragment.DETAIL_URI, contentUri);
-
-            DetailFragment fragment = new DetailFragment();
-            fragment.setArguments(args);
-
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.detail_container, fragment, DETAILFRAGMENT_TAG)
-                    .commit();
-            Log.d("Click","mTwoPane is true ");
+            showMovieDetailInMainActivity(contentUri);
         } else {
             Intent intent = new Intent(this, DetailActivity.class)
                     .setData(contentUri);
@@ -151,23 +150,45 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
     }
 
     @Override
-    public void onShowDefalutItem(Cursor cursor) {
-        Log.d("onShowDefalutItem","R2: cursor is " + cursor);
-        if (cursor != null){
-            if (mMode.equals("popular")){
-                this.onItemSelected(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
-                        mMode, cursor.getInt(COL_POPULAR_RANK)));
-                Log.d("onShowDefalutItem","R3: mMode is " + mMode + " rank is : " + cursor.getInt(COL_POPULAR_RANK));
-            }else if (mMode.equals("toprated")){
-                this.onItemSelected(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
-                        mMode, cursor.getInt(COL_TOPRATED_RANK)));
-                Log.d("onShowDefalutItem","R3: mMode is " + mMode + " rank is : " + cursor.getInt(COL_TOPRATED_RANK));
-            }else{
-                Log.e("onShowDefalutItem","mode is wrong");
-            }
-        }else{
-            Log.d("onShowDefalutItem","error: cursor is " + cursor);
-        }
-
+    public void onListChanged(Cursor cursor) {
+//        Log.d("onListChanged","onListChanged");
+//        if(!mTwoPane){
+//            Log.d("onListChanged","mTwoPane is false ");
+//            return;
+//        }
+//        Log.d("onListChanged","R2: cursor is " + cursor);
+//        if (cursor != null && mMode != null){
+//            int rank = mMode.equals("popular")?cursor.getInt(COL_POPULAR_RANK)
+//                    :cursor.getInt(COL_TOPRATED_RANK);
+//
+//            showMovieDetailInMainActivity(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
+//                    mMode, rank));
+//            Log.d("onListChanged","R3: mMode is " + mMode + " rank is : " + rank);
+//        }else{
+//            Log.d("onListChanged","error: cursor is " + cursor);
+//        }
     }
+
+    //当电影列表里没有item，给予用户提示。
+    @Override
+    public void onNoItemInList() {
+        Log.d("onNoItemInList","onNoItemInList");
+    }
+
+    // In two-pane mode, show the detail view in this activity by
+    // adding or replacing the detail fragment using a
+    // fragment transaction.
+    private void showMovieDetailInMainActivity(Uri contentUri){
+        Bundle args = new Bundle();
+        args.putParcelable(DetailFragment.DETAIL_URI, contentUri);
+
+        DetailFragment fragment = new DetailFragment();
+        fragment.setArguments(args);
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.detail_container, fragment, DETAILFRAGMENT_TAG)
+                .commit();
+        Log.d("showMovieDetail","cursor is " + contentUri);
+    }
+
 }
