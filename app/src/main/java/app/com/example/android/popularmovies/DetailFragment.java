@@ -140,10 +140,8 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         //判断该电影是否被收藏，并以此显示对应的菜单“收藏”或“取消收藏”。
         if (mIsCollect != null) {
             if (mIsCollect.equals("true")){
-                //menuItem.setTitle(R.string.action_collect_cancel); //"取消收藏“
                 mCollectMenuItem.setIcon(R.drawable.ic_favorite_white_24dp);
             }else{
-                //menuItem.setTitle(R.string.action_collect);//”收藏
                 mCollectMenuItem.setIcon(R.drawable.ic_favorite_border_white_24dp);
             }
         }else{
@@ -173,6 +171,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
                 item.setIcon(R.drawable.ic_favorite_border_white_24dp);
                 updateCollect("false");
                 mIsCollect = "false";
+                ((Callback) getActivity()).onCancelCollection();
             }
             return true;
         }
@@ -181,7 +180,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
 
     private void updateCollect(String isCollect){
 
-        //更新数据库中影片的收藏值
+        //更新数据库中影片是否收藏
         if (mMovieId != null && isCollect != null) {
             ContentValues values = new ContentValues();
             values.put(MovieContract.MovieEntry.COLUMN_COLLECT, isCollect);
@@ -192,16 +191,6 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             mIsCollect = isCollect;
         }else{
             Toast.makeText(getContext(),"数据正在加载，请稍后再试", Toast.LENGTH_LONG).show();
-        }
-    }
-
-    void onModeChanged( String mode,int rank) {
-        // replace the uri, since the mode has changed
-        Uri uri = mUri;
-        if (null != uri) {
-            Uri updatedUri = MovieContract.MovieEntry.buildMovieWithModeAndRankUri(mode, rank);
-            mUri = updatedUri;
-            getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
         }
     }
 
@@ -231,110 +220,111 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         //ButterKnife连接
         ButterKnife.bind(DetailFragment.this, mView);
 
-        FetchDetailTask fetchDetailTask = new FetchDetailTask(getContext());
-        fetchDetailTask.setOnDataFinishedListener(new FetchDetailTask.OnDataFinishedListener(){
-            @Override
-            public void onDataSuccessfully(Object data) {
-                HashMap detailDataArray = (HashMap) data;
+        if(isAdded()){
+            FetchDetailTask fetchDetailTask = new FetchDetailTask(getContext());
+            fetchDetailTask.setOnDataFinishedListener(new FetchDetailTask.OnDataFinishedListener(){
+                @Override
+                public void onDataSuccessfully(Object data) {
+                    HashMap detailDataArray = (HashMap) data;
 
-                //载入电影名字
-                String name = (String) detailDataArray.get("name");
-                nameTextView.setText(name);
-                nameTextView.setFocusable(true);
-                nameTextView.setFocusableInTouchMode(true);
-                nameTextView.requestFocus();
+                    //载入电影名字
+                    String name = (String) detailDataArray.get("name");
+                    nameTextView.setText(name);
+                    nameTextView.setFocusable(true);
+                    nameTextView.setFocusableInTouchMode(true);
+                    nameTextView.requestFocus();
 
-                //载入电影图片
-                BitmapDrawable bitmapDrawable = (BitmapDrawable) detailDataArray
-                        .get("bitmapDrawable");
-                imageView.setImageDrawable(bitmapDrawable);
+                    //载入电影图片
+                    BitmapDrawable bitmapDrawable = (BitmapDrawable) detailDataArray
+                            .get("bitmapDrawable");
+                    imageView.setImageDrawable(bitmapDrawable);
 
-                mMovieId = (String) detailDataArray.get("movieId");
-                mIsCollect = (String) detailDataArray.get("isCollect");
-                //判断mCollectMenuItem是否加载
-                if (mCollectMenuItem != null && mIsCollect != null) {
-                    if (mIsCollect.equals("true")){
-                        //menuItem.setTitle(R.string.action_collect_cancel); //"取消收藏“
-                        mCollectMenuItem.setIcon(R.drawable.ic_favorite_white_24dp);
+                    mMovieId = (String) detailDataArray.get("movieId");
+                    mIsCollect = (String) detailDataArray.get("isCollect");
+                    //判断mCollectMenuItem是否加载
+                    if (mCollectMenuItem != null && mIsCollect != null) {
+                        if (mIsCollect.equals("true")){
+                            //menuItem.setTitle(R.string.action_collect_cancel); //"取消收藏“
+                            mCollectMenuItem.setIcon(R.drawable.ic_favorite_white_24dp);
+                        }else{
+                            //menuItem.setTitle(R.string.action_collect);//”收藏
+                            mCollectMenuItem.setIcon(R.drawable.ic_favorite_border_white_24dp);
+                        }
                     }else{
-                        //menuItem.setTitle(R.string.action_collect);//”收藏
-                        mCollectMenuItem.setIcon(R.drawable.ic_favorite_border_white_24dp);
+                        Log.d(LOG_TAG,"mIsCollect is null");
                     }
-                }else{
-                    Log.d(LOG_TAG,"mIsCollect is null");
+
+                    //载入电影上映日期
+                    String date = (String) detailDataArray.get("date");
+                    dateTextView.setText(date);
+
+                    //载入电影评分
+                    String voteAverage = (String) detailDataArray.get("voteAverage");
+                    voteAverageTextView.setText(voteAverage+getString(R.string.movie_detail_voteAverage_extraText));
+
+                    //movie's runtime
+                    int runtime = (int) detailDataArray.get("runtime");
+                    runtimeTextView.setText(runtime + getString(R.string.movie_detail_runtime_extraText));
+
+                    //载入电影简介，并实现展开收起的功能
+                    String overview = (String) detailDataArray.get("overview");
+                    overviewCloseTextView.setText(overview);
+                    overviewOpenTextView.setText(overview);
+                    overviewOpenTextView.setVisibility(View.GONE);
+                    overviewOpenOrCloseTextView.setText(R.string.movie_detail_overview_open);
+                    overviewOpenOrCloseTextView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if(overviewCloseTextView.getVisibility() == View.VISIBLE){
+                                overviewCloseTextView.setVisibility(View.GONE);
+                                overviewOpenTextView.setVisibility(View.VISIBLE);
+                                overviewOpenOrCloseTextView.setText(R.string.movie_detail_overview_close);
+                            }else{
+                                overviewCloseTextView.setVisibility(View.VISIBLE);
+                                overviewOpenTextView.setVisibility(View.GONE);
+                                overviewOpenOrCloseTextView.setText(R.string.movie_detail_overview_open);
+                            }
+                        }
+                    });
                 }
 
-                //载入电影上映日期
-                String date = (String) detailDataArray.get("date");
-                dateTextView.setText(date);
+                @Override
+                public void onDataFailed() {
+                    Toast.makeText(getContext(),"获取影片详细信息失败",Toast.LENGTH_SHORT).show();
+                }
+            });
+            fetchDetailTask.execute(mData);
 
-                //载入电影评分
-                String voteAverage = (String) detailDataArray.get("voteAverage");
-                voteAverageTextView.setText(voteAverage+getString(R.string.movie_detail_voteAverage_extraText));
+            FetchReviewsTask fetchReviewsTask = new FetchReviewsTask(getContext());
+            fetchReviewsTask.setOnDataFinishedListener(new FetchReviewsTask.OnDataFinishedListener(){
+                @Override
+                public void onDataSuccessfully(Object data) {
+                    ArrayList<HashMap> reviewsDataArray = (ArrayList<HashMap>) data;
+                    reviewsListView.setAdapter(new ReviewAdapter(getActivity(),reviewsDataArray));
+                }
 
-                //movie's runtime
-                int runtime = (int) detailDataArray.get("runtime");
-                runtimeTextView.setText(runtime + getString(R.string.movie_detail_runtime_extraText));
+                @Override
+                public void onDataFailed() {
+                    Toast.makeText(getContext(),"获取评论数据失败",Toast.LENGTH_SHORT).show();
+                }
+            });
+            fetchReviewsTask.execute(mData);
 
-                //载入电影简介，并实现展开收起的功能
-                String overview = (String) detailDataArray.get("overview");
-                overviewCloseTextView.setText(overview);
-                overviewOpenTextView.setText(overview);
-                overviewOpenTextView.setVisibility(View.GONE);
-                overviewOpenOrCloseTextView.setText(R.string.movie_detail_overview_open);
-                overviewOpenOrCloseTextView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if(overviewCloseTextView.getVisibility() == View.VISIBLE){
-                            overviewCloseTextView.setVisibility(View.GONE);
-                            overviewOpenTextView.setVisibility(View.VISIBLE);
-                            overviewOpenOrCloseTextView.setText(R.string.movie_detail_overview_close);
-                        }else{
-                            overviewCloseTextView.setVisibility(View.VISIBLE);
-                            overviewOpenTextView.setVisibility(View.GONE);
-                            overviewOpenOrCloseTextView.setText(R.string.movie_detail_overview_open);
-                        }
-                    }
-                });
-            }
+            FetchVideosTask fetchVideosTask = new FetchVideosTask(getContext());
+            fetchVideosTask.setOnDataFinishedListener(new FetchVideosTask.OnDataFinishedListener(){
+                @Override
+                public void onDataSuccessfully(Object data) {
+                    ArrayList<HashMap> videosDataArray = (ArrayList<HashMap>) data;
+                    videosListView.setAdapter(new VideoAdapter(getActivity(),videosDataArray));
+                }
 
-            @Override
-            public void onDataFailed() {
-                Toast.makeText(getContext(),"获取影片详细信息失败",Toast.LENGTH_SHORT).show();
-            }
-        });
-        fetchDetailTask.execute(mData);
-
-        FetchReviewsTask fetchReviewsTask = new FetchReviewsTask(getContext());
-        fetchReviewsTask.setOnDataFinishedListener(new FetchReviewsTask.OnDataFinishedListener(){
-            @Override
-            public void onDataSuccessfully(Object data) {
-                ArrayList<HashMap> reviewsDataArray = (ArrayList<HashMap>) data;
-                reviewsListView.setAdapter(new ReviewAdapter(getActivity(),reviewsDataArray));
-            }
-
-            @Override
-            public void onDataFailed() {
-                Toast.makeText(getContext(),"获取评论数据失败",Toast.LENGTH_SHORT).show();
-            }
-        });
-        fetchReviewsTask.execute(mData);
-
-        FetchVideosTask fetchVideosTask = new FetchVideosTask(getContext());
-        fetchVideosTask.setOnDataFinishedListener(new FetchVideosTask.OnDataFinishedListener(){
-            @Override
-            public void onDataSuccessfully(Object data) {
-                ArrayList<HashMap> videosDataArray = (ArrayList<HashMap>) data;
-                videosListView.setAdapter(new VideoAdapter(getActivity(),videosDataArray));
-            }
-
-            @Override
-            public void onDataFailed() {
-                Toast.makeText(getContext(),"获取预告片数据失败",Toast.LENGTH_SHORT).show();
-            }
-        });
-        fetchVideosTask.execute(mData);
-
+                @Override
+                public void onDataFailed() {
+                    Toast.makeText(getContext(),"获取预告片数据失败",Toast.LENGTH_SHORT).show();
+                }
+            });
+            fetchVideosTask.execute(mData);
+        }
     }
 
     @Override
@@ -343,5 +333,9 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+    }
+
+    public interface Callback {
+        void onCancelCollection();
     }
 }

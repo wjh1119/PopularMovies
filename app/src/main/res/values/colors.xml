@@ -32,5 +32,6 @@
 
 
     <color name="hint_textcolor">#000000</color>
+    <color name="hint_background">#cccccc</color>
 
 </resources>

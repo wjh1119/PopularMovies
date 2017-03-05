@@ -19,4 +19,5 @@
     <dimen name="datail_reviews_textsize">18sp</dimen>
     <dimen name="datail_reviews_padding">10dp</dimen>
     <dimen name="detail_videos_play_height">30dp</dimen>
+    <dimen name="hint_textsize">20sp</dimen>
 </resources>

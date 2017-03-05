@@ -1,18 +1,18 @@
 package app.com.example.android.popularmovies;
 
 import android.content.Intent;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import app.com.example.android.popularmovies.sync.PopularMoviesSyncAdapter;
 
-public class MainActivity extends ActionBarActivity implements MovieFragment.Callback{
+public class MainActivity extends ActionBarActivity
+        implements MovieFragment.Callback, DetailFragment.Callback{
 
     private final String LOG_TAG = MainActivity.class.getSimpleName();
     private static final String DETAILFRAGMENT_TAG = "DFTAG";
@@ -31,6 +31,7 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
         mMode = Utility.getPreferredMode(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         if (findViewById(R.id.detail_container) != null) {
             // The detail container view will be present only in the large-screen layouts
             // (res/layout-sw600dp). If this view is present, then the activity should be
@@ -40,16 +41,7 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
             // adding or replacing the detail fragment using a
             // fragment transaction.
             if (savedInstanceState == null) {
-                FragmentManager manager = getSupportFragmentManager();
-//                manager.beginTransaction()
-//                        .replace(R.id.detail_container, new HintFragment(), HINTFRAGMENT_TAG)
-//                        .add(R.id.detail_container, new DetailFragment(), DETAILFRAGMENT_TAG)
-//                        .hide(manager.findFragmentByTag(DETAILFRAGMENT_TAG))
-//                        .commit();
-                manager.beginTransaction()
-                        .replace(R.id.detail_container, new HintFragment(), HINTFRAGMENT_TAG)
-                        .commit();
-
+                showHintInDetailContainerOrToast("请点击左侧电影海报查看电影详细信息");
             }
         } else {
             mTwoPane = false;
@@ -96,10 +88,7 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
                 if ( null != mf ) {
                     mf.onIsShowCollectionChanged(mIsShowCollection);
                 }
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.detail_container, new HintFragment(), HINTFRAGMENT_TAG)
-                        .commit();
-
+                showHintInDetailContainerOrToast("电影列表已刷新");
             }else{
                 item.setTitle(getString(R.string.action_showCollection));//“我的收藏列表”
                 mIsShowCollection = false;
@@ -107,9 +96,7 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
                 if ( null != mf ) {
                     mf.onIsShowCollectionChanged(mIsShowCollection);
                 }
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.detail_container, new HintFragment(), HINTFRAGMENT_TAG)
-                        .commit();
+                showHintInDetailContainerOrToast("电影列表已刷新");
             }
             return true;
         }
@@ -128,19 +115,45 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
             if ( null != mf ) {
                 mf.onModeChanged(mIsShowCollection);
             }
-            getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.detail_container, new HintFragment(), HINTFRAGMENT_TAG)
-                        .commit();
+            showHintInDetailContainerOrToast("电影列表更改排序方式");
 
             mMode = mode;
         }
 
     }
 
+    private void showHintInDetailContainerOrToast(String hint){
+        if (mTwoPane){
+            Bundle args = new Bundle();
+            args.putString(HintFragment.HINT, hint);
+
+            HintFragment fragment = new HintFragment();
+            fragment.setArguments(args);
+
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.detail_container, fragment, HINTFRAGMENT_TAG)
+                    .commit();
+        }else{
+            Toast.makeText(this,hint,Toast.LENGTH_SHORT).show();
+        }
+    }
+
     @Override
     public void onItemSelected(Uri contentUri) {
         if (mTwoPane) {
-            showMovieDetailInMainActivity(contentUri);
+            // In two-pane mode, show the detail view in this activity by
+            // adding or replacing the detail fragment using a
+            // fragment transaction.
+            Bundle args = new Bundle();
+            args.putParcelable(DetailFragment.DETAIL_URI, contentUri);
+
+            DetailFragment fragment = new DetailFragment();
+            fragment.setArguments(args);
+
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.detail_container, fragment, DETAILFRAGMENT_TAG)
+                    .commit();
+            Log.d("Click","mTwoPane is true ");
         } else {
             Intent intent = new Intent(this, DetailActivity.class)
                     .setData(contentUri);
@@ -150,45 +163,9 @@ public class MainActivity extends ActionBarActivity implements MovieFragment.Cal
     }
 
     @Override
-    public void onListChanged(Cursor cursor) {
-//        Log.d("onListChanged","onListChanged");
-//        if(!mTwoPane){
-//            Log.d("onListChanged","mTwoPane is false ");
-//            return;
-//        }
-//        Log.d("onListChanged","R2: cursor is " + cursor);
-//        if (cursor != null && mMode != null){
-//            int rank = mMode.equals("popular")?cursor.getInt(COL_POPULAR_RANK)
-//                    :cursor.getInt(COL_TOPRATED_RANK);
-//
-//            showMovieDetailInMainActivity(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
-//                    mMode, rank));
-//            Log.d("onListChanged","R3: mMode is " + mMode + " rank is : " + rank);
-//        }else{
-//            Log.d("onListChanged","error: cursor is " + cursor);
-//        }
+    public void onCancelCollection() {
+        if(mTwoPane && mIsShowCollection){
+            showHintInDetailContainerOrToast("该电影不在收藏列表，请在左侧重新选择");
+        }
     }
-
-    //当电影列表里没有item，给予用户提示。
-    @Override
-    public void onNoItemInList() {
-        Log.d("onNoItemInList","onNoItemInList");
-    }
-
-    // In two-pane mode, show the detail view in this activity by
-    // adding or replacing the detail fragment using a
-    // fragment transaction.
-    private void showMovieDetailInMainActivity(Uri contentUri){
-        Bundle args = new Bundle();
-        args.putParcelable(DetailFragment.DETAIL_URI, contentUri);
-
-        DetailFragment fragment = new DetailFragment();
-        fragment.setArguments(args);
-
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.detail_container, fragment, DETAILFRAGMENT_TAG)
-                .commit();
-        Log.d("showMovieDetail","cursor is " + contentUri);
-    }
-
 }
