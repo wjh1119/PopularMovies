@@ -47,10 +47,11 @@
     <string name="content_authority">app.com.example.android.popularmovies</string>
 
     <!-- Notification Format -->
-    <string name="notification">
-        Movie Rank Update: <xliff:g id="title">%1$s</xliff:g>
-        release date: <xliff:g id="releaseDate">%2$s</xliff:g>
-        vote average: <xliff:g id="voteAverage">%3$s</xliff:g>
+    <string name="notification_changed">
+        今日<xliff:g id="mode">%1$s</xliff:g>榜单第一名变更为：<xliff:g id="title">%2$s</xliff:g>
+    </string>
+    <string name="notification_no_changed">
+        今日<xliff:g id="mode">%1$s</xliff:g>榜单第一名保持不变。
     </string>
 
     <!-- Strings related to Notification preference -->

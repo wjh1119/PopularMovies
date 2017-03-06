@@ -1,8 +1,10 @@
 package app.com.example.android.popularmovies;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -10,6 +12,8 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import app.com.example.android.popularmovies.sync.PopularMoviesSyncAdapter;
+
+import static app.com.example.android.popularmovies.data.MovieContract.MovieEntry.buildMovieWithModeAndRankUri;
 
 public class MainActivity extends ActionBarActivity
         implements MovieFragment.Callback, DetailFragment.Callback{
@@ -22,15 +26,34 @@ public class MainActivity extends ActionBarActivity
 
     private String mMode;
 
-    private boolean mIsShowCollection;
+    private boolean mIsShowCollection = false;
 
     private static MenuItem mShowCollectionItem;
+
+    public static final String NOTIFICATION_MODE = "MODE";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         mMode = Utility.getPreferredMode(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //获取intent
+        Intent intent = getIntent();
+
+        if (intent != null && intent.getStringExtra(NOTIFICATION_MODE) != null) {
+            mMode = intent.getStringExtra(NOTIFICATION_MODE);
+
+            MovieFragment mf = (MovieFragment)getSupportFragmentManager().findFragmentById(R.id.main_container);
+            if ( null != mf ) {
+                mf.onModeChanged(mIsShowCollection);
+            }
+            onItemSelected(buildMovieWithModeAndRankUri(mMode,1));
+
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            prefs.edit().putString(getString(R.string.pref_mode_key),mMode);
+
+        }
 
         if (findViewById(R.id.detail_container) != null) {
             // The detail container view will be present only in the large-screen layouts

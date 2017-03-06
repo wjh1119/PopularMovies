@@ -40,7 +40,6 @@ import app.com.example.android.popularmovies.BuildConfig;
 import app.com.example.android.popularmovies.MainActivity;
 import app.com.example.android.popularmovies.NetworkUtil;
 import app.com.example.android.popularmovies.R;
-import app.com.example.android.popularmovies.Utility;
 import app.com.example.android.popularmovies.data.MovieContract;
 import app.com.example.android.popularmovies.data.MovieDbHelper;
 
@@ -54,7 +53,8 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
     public static final int SYNC_FLEXTIME = SYNC_INTERVAL/3;
 
     private static final long DAY_IN_MILLIS = 1000 * 60 * 60 * 24;
-    private static final int WEATHER_NOTIFICATION_ID = 3004;
+    private static final int POPULAR_NOTIFICATION_ID = 3004;
+    private static final int TOPRATED_NOTIFICATION_ID = 3005;
 
 
     private static final String[] NOTIFY_MOVIE_PROJECTION = new String[] {
@@ -84,13 +84,22 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
         String movieJsonStrForPopular = getMovieJsonStr("popular");
         String movieJsonStrForToprated = getMovieJsonStr("toprated");
         try{
+            int idOfFirstRankForPopularBefore = getFirstRankIdByMode("popular");
+            int idOfFirstRankForTopratedBefore = getFirstRankIdByMode("toprated");
             setMovieRankToZero();
             Log.d(LOG_TAG,"set rank of movies to 0");
-            getMovieDataFromJson(movieJsonStrForToprated,"toprated");
+            int idOfFirstRankForPopularAfter = getMovieDataFromJson(movieJsonStrForPopular,"popular");
             Log.v(LOG_TAG,"getMovieData toprated from " + movieJsonStrForToprated);
-            getMovieDataFromJson(movieJsonStrForPopular,"popular");
+            int idOfFirstRankForTopratedAfter = getMovieDataFromJson(movieJsonStrForToprated,"toprated");
             Log.v(LOG_TAG,"getMovieData popular from " + movieJsonStrForPopular);
-            notifyMovie();
+            boolean isPopularFirstItemChanged
+                    = idOfFirstRankForPopularBefore != idOfFirstRankForPopularAfter;
+            Log.d(LOG_TAG," id of first rank for popular is " + idOfFirstRankForPopularBefore+idOfFirstRankForPopularAfter);
+            boolean isTopratedFirstItemChanged
+                    = idOfFirstRankForTopratedBefore != idOfFirstRankForTopratedAfter;
+            //通知用户某一模式下的排名的变化，第三个参数为当无变化时是否通知用户。
+            notifyMovie(isPopularFirstItemChanged,"popular",true);
+            notifyMovie(isTopratedFirstItemChanged,"toprated",true);
         }catch (JSONException e) {
             Log.e(LOG_TAG, e.getMessage(), e);
             e.printStackTrace();
@@ -182,9 +191,11 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
-    //从movieJsonStr中获取电影的详细数据，并插入值MovieEntry中
-    private void getMovieDataFromJson(String movieJsonStr,String mode)
+    //从movieJsonStr中获取电影的详细数据，插入数据库中,并返回该排列模式下第一名的id，若无则返回-1。
+    private int getMovieDataFromJson(String movieJsonStr,String mode)
             throws JSONException {
+
+        int firstRankId  = -1;
 
         final String OWM_POSTER_PATH = "poster_path";
 
@@ -208,8 +219,12 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                 JSONObject rankJson = new JSONObject(movieJsonStr);
                 JSONArray movieArray = rankJson.getJSONArray(OWM_LIST);
 
-                int numberOfMovie = movieArray.length();
-//                int numberOfMovie = 4;
+//                int numberOfMovie = movieArray.length();
+                int numberOfMovie = 4;
+
+                if (numberOfMovie == 1){
+                    firstRankId = -1;
+                }
 
                 MovieDbHelper dbHelper = new MovieDbHelper(getContext());
                 SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -219,8 +234,13 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                     // 根据位置获取电影信息
                     JSONObject movieInfo = movieArray.getJSONObject(i);
 
-                    //根据电影id查询电影是否在数据表中
                     int id = Integer.parseInt(movieInfo.getString(OWM_ID));
+                    //返回第一名的Id。
+                    if (i == 0) {
+                        firstRankId = id;
+                    }
+
+                    //根据电影id查询电影是否在数据表中
                     String idSelection = MovieContract.MovieEntry.TABLE_NAME+
                             "." + MovieContract.MovieEntry.COLUMN_ID + " = ? ";
                     String[] idSelectionArgs = new String[]{Integer.toString(id)};
@@ -313,7 +333,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                         getCursorById.close();
                     }else {
 
-                        //如果id已存在，更新对应排序模式的排名
+                        //更新对应排序模式的排名
                         ContentValues rankValue = new ContentValues();
                         if (mode.equals("popular")) {
                             rankValue.put(MovieContract.MovieEntry.COLUMN_POPULAR_RANK, i + 1);
@@ -339,6 +359,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
         }catch (NullPointerException e){
             Log.e(LOG_TAG,e.getMessage(), e);
         }
+        return firstRankId;
     }
 
     //根据获取的Id，获取runtime，reviews，videos的数据
@@ -454,6 +475,39 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
         db.close();
     }
 
+    //查询某一模式下排名第一的电影的ID的排名,没有则返回-1
+    private int getFirstRankIdByMode(String mode){
+        MovieDbHelper dbHelper = new MovieDbHelper(getContext());
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        int idOfFirstRank = -1;
+
+        String sPopularAndRankSelection =
+                MovieContract.MovieEntry.TABLE_NAME+
+                        "." + MovieContract.MovieEntry.COLUMN_POPULAR_RANK + " = ? ";
+
+        String sTopratedAndRankSelection =
+                MovieContract.MovieEntry.TABLE_NAME+
+                        "." + MovieContract.MovieEntry.COLUMN_TOPRATED_RANK + " = ? ";
+
+        String selection = mode.equals("popular")?sPopularAndRankSelection:sTopratedAndRankSelection;
+
+        Cursor cursor = db.query(
+                MovieContract.MovieEntry.TABLE_NAME,  // Table to Query
+                new String[] {MovieContract.MovieEntry.COLUMN_ID}, // leaving "columns" null just returns all the columns.
+                selection, // cols for "where" clause
+                new String[] {Integer.toString(1)}, // values for "where" clause
+                null, // columns to group by
+                null, // columns to filter by row groups
+                null  // sort order
+        );
+
+        if(cursor!=null&&cursor.moveToFirst()) {
+            idOfFirstRank = cursor.getInt(cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_ID));
+        }
+        db.close();
+        return idOfFirstRank;
+    }
+
     /**
      * Helper method to schedule the sync adapter periodic execution
      */
@@ -545,7 +599,10 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
         getSyncAccount(context);
     }
 
-    private void notifyMovie() {
+    private void notifyMovie(boolean isFirstItemChanged,String mode,boolean isNotifyIfNotChanged) {
+        if (!isFirstItemChanged && !isNotifyIfNotChanged){
+            return;
+        }
         Context context = getContext();
         //checking the last update and notify if it' the first of the day
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -558,27 +615,36 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
             long lastSync = prefs.getLong(lastNotificationKey, 0);
 
             if (System.currentTimeMillis() - lastSync >= DAY_IN_MILLIS) {
-                // Last sync was more than 1 day ago, let's send a notification with the weather.
-                String mode = Utility.getPreferredMode(context);
 
+                String title = context.getString(R.string.app_name);
                 Uri movieUri = MovieContract.MovieEntry.buildMovieWithModeAndRankUri(mode, 1);
 
                 // we'll query our contentProvider, as always
                 Cursor cursor = context.getContentResolver().query(movieUri, NOTIFY_MOVIE_PROJECTION, null, null, null);
 
                 if (cursor.moveToFirst()) {
-                    int movieId = cursor.getInt(INDEX_ID);
+//                        int movieId = cursor.getInt(INDEX_ID);
                     String movieTitle = cursor.getString(INDEX_TITLE);
-                    String releaseDate = cursor.getString(INDEX_RELEASE_DATE);
-                    String voteAverage = cursor.getString(INDEX_VOTE_AVERAGE);
+//                        String releaseDate = cursor.getString(INDEX_RELEASE_DATE);
+//                        String voteAverage = cursor.getString(INDEX_VOTE_AVERAGE);
 
-                    String title = context.getString(R.string.app_name);
+                    String contentText;
 
-                    // Define the text of the forecast.
-                    String contentText = String.format(context.getString(R.string.notification),
-                            movieTitle,
-                            releaseDate,
-                            voteAverage);
+                    String modeName = mode.equals("popular")?
+                            context.getString(R.string.pref_mode_label_popular):
+                            context.getString(R.string.pref_mode_label_toprated);
+
+                    int NOTIFICATION_ID = mode.equals("popular")?
+                            POPULAR_NOTIFICATION_ID:TOPRATED_NOTIFICATION_ID;
+
+                    if (isFirstItemChanged){
+                        contentText = String.format(context.getString(R.string.notification_changed),
+                                modeName,
+                                movieTitle);
+                    }else{
+                        contentText = String.format(context.getString(R.string.notification_no_changed),
+                                modeName);
+                    }
 
                     // NotificationCompatBuilder is a very convenient way to build backward-compatible
                     // notifications.  Just throw in some data.
@@ -590,7 +656,8 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
 
                     // Make something interesting happen when the user clicks on the notification.
                     // In this case, opening the app is sufficient.
-                    Intent resultIntent = new Intent(context, MainActivity.class);
+                    Intent resultIntent = new Intent(context, MainActivity.class)
+                            .putExtra(MainActivity.NOTIFICATION_MODE,mode);
 
                     // The stack builder object will contain an artificial back stack for the
                     // started Activity.
@@ -607,8 +674,8 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
 
                     NotificationManager mNotificationManager =
                             (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
-                    // WEATHER_NOTIFICATION_ID allows you to update the notification later on.
-                    mNotificationManager.notify(WEATHER_NOTIFICATION_ID, mBuilder.build());
+                    // NOTIFICATION_ID allows you to update the notification later on.
+                    mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
 
                     //refreshing last sync
                     SharedPreferences.Editor editor = prefs.edit();

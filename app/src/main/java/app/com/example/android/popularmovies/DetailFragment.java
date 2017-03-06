@@ -220,13 +220,13 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         //ButterKnife连接
         ButterKnife.bind(DetailFragment.this, mView);
 
-        if(isAdded()){
-            FetchDetailTask fetchDetailTask = new FetchDetailTask(getContext());
-            fetchDetailTask.setOnDataFinishedListener(new FetchDetailTask.OnDataFinishedListener(){
-                @Override
-                public void onDataSuccessfully(Object data) {
-                    HashMap detailDataArray = (HashMap) data;
+        FetchDetailTask fetchDetailTask = new FetchDetailTask(getContext());
+        fetchDetailTask.setOnDataFinishedListener(new FetchDetailTask.OnDataFinishedListener(){
+            @Override
+            public void onDataSuccessfully(Object data) {
+                HashMap detailDataArray = (HashMap) data;
 
+                if(isAdded()){
                     //载入电影名字
                     String name = (String) detailDataArray.get("name");
                     nameTextView.setText(name);
@@ -287,44 +287,44 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
                         }
                     });
                 }
+            }
 
-                @Override
-                public void onDataFailed() {
-                    Toast.makeText(getContext(),"获取影片详细信息失败",Toast.LENGTH_SHORT).show();
-                }
-            });
-            fetchDetailTask.execute(mData);
+            @Override
+            public void onDataFailed() {
+                Toast.makeText(getContext(),"获取影片详细信息失败",Toast.LENGTH_SHORT).show();
+            }
+        });
+        fetchDetailTask.execute(mData);
 
-            FetchReviewsTask fetchReviewsTask = new FetchReviewsTask(getContext());
-            fetchReviewsTask.setOnDataFinishedListener(new FetchReviewsTask.OnDataFinishedListener(){
-                @Override
-                public void onDataSuccessfully(Object data) {
-                    ArrayList<HashMap> reviewsDataArray = (ArrayList<HashMap>) data;
-                    reviewsListView.setAdapter(new ReviewAdapter(getActivity(),reviewsDataArray));
-                }
+        FetchReviewsTask fetchReviewsTask = new FetchReviewsTask(getContext());
+        fetchReviewsTask.setOnDataFinishedListener(new FetchReviewsTask.OnDataFinishedListener(){
+            @Override
+            public void onDataSuccessfully(Object data) {
+                ArrayList<HashMap> reviewsDataArray = (ArrayList<HashMap>) data;
+                reviewsListView.setAdapter(new ReviewAdapter(getActivity(),reviewsDataArray));
+            }
 
-                @Override
-                public void onDataFailed() {
-                    Toast.makeText(getContext(),"获取评论数据失败",Toast.LENGTH_SHORT).show();
-                }
-            });
-            fetchReviewsTask.execute(mData);
+            @Override
+            public void onDataFailed() {
+                Toast.makeText(getContext(),"获取评论数据失败",Toast.LENGTH_SHORT).show();
+            }
+        });
+        fetchReviewsTask.execute(mData);
 
-            FetchVideosTask fetchVideosTask = new FetchVideosTask(getContext());
-            fetchVideosTask.setOnDataFinishedListener(new FetchVideosTask.OnDataFinishedListener(){
-                @Override
-                public void onDataSuccessfully(Object data) {
-                    ArrayList<HashMap> videosDataArray = (ArrayList<HashMap>) data;
-                    videosListView.setAdapter(new VideoAdapter(getActivity(),videosDataArray));
-                }
+        FetchVideosTask fetchVideosTask = new FetchVideosTask(getContext());
+        fetchVideosTask.setOnDataFinishedListener(new FetchVideosTask.OnDataFinishedListener(){
+            @Override
+            public void onDataSuccessfully(Object data) {
+                ArrayList<HashMap> videosDataArray = (ArrayList<HashMap>) data;
+                videosListView.setAdapter(new VideoAdapter(getActivity(),videosDataArray));
+            }
 
-                @Override
-                public void onDataFailed() {
-                    Toast.makeText(getContext(),"获取预告片数据失败",Toast.LENGTH_SHORT).show();
-                }
-            });
-            fetchVideosTask.execute(mData);
-        }
+            @Override
+            public void onDataFailed() {
+                Toast.makeText(getContext(),"获取预告片数据失败",Toast.LENGTH_SHORT).show();
+            }
+        });
+        fetchVideosTask.execute(mData);
     }
 
     @Override
