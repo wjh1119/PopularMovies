@@ -49,7 +49,7 @@ import static app.com.example.android.popularmovies.Utility.getImageFromUrl;
 public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
     public final String LOG_TAG = PopularMoviesSyncAdapter.class.getSimpleName();
     // Interval at which to sync with the weather, in seconds.
-    public static final int SYNC_INTERVAL = 60;  // 3 hours
+    public static final int SYNC_INTERVAL = 60 * 60 * 3;  // 3 hours
     public static final int SYNC_FLEXTIME = SYNC_INTERVAL/3;
 
     private static final long DAY_IN_MILLIS = 1000 * 60 * 60 * 24;
@@ -601,6 +601,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
 
     private void notifyMovie(boolean isFirstItemChanged,String mode,boolean isNotifyIfNotChanged) {
         if (!isFirstItemChanged && !isNotifyIfNotChanged){
+            Log.d(LOG_TAG,"not notify");
             return;
         }
         Context context = getContext();
@@ -656,8 +657,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
 
                     // Make something interesting happen when the user clicks on the notification.
                     // In this case, opening the app is sufficient.
-                    Intent resultIntent = new Intent(context, MainActivity.class)
-                            .putExtra(MainActivity.NOTIFICATION_MODE,mode);
+                    Intent resultIntent = new Intent(context, MainActivity.class);
 
                     // The stack builder object will contain an artificial back stack for the
                     // started Activity.
