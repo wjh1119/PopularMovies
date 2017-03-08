@@ -1,6 +1,5 @@
 package app.com.example.android.popularmovies.AsyncTask;
 
-import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -24,11 +23,10 @@ import static app.com.example.android.popularmovies.DetailFragment.COL_VOTE_AVER
 public class FetchDetailTask extends AsyncTask<Cursor, Void, HashMap> {
     private final String LOG_TAG = FetchDetailTask.class.getSimpleName();
 
-    private final Context mContext;
     private Cursor mData;
 
-    public FetchDetailTask(Context context) {
-        mContext = context;
+    public FetchDetailTask() {
+
     }
 
     //数据监听器
