@@ -74,7 +74,7 @@ public class VideoAdapter extends BaseAdapter {
 
         viewHolder.numberTextView.setText(video.get("number").toString());
         viewHolder.nameTextView.setText(video.get("name").toString());
-        viewHolder.playImageView.setImageResource(R.drawable.playvido);
+        viewHolder.playImageView.setImageResource(R.drawable.playvideo);
         viewHolder.playImageView.setOnClickListener(new View.OnClickListener() {
 
             @Override
