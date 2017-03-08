@@ -31,8 +31,6 @@ public class MainActivity extends ActionBarActivity
 
     private static MenuItem mShowCollectionItem;
 
-//    public static final String NOTIFICATION_MODE = "MODE";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         mMode = Utility.getPreferredMode(this);
@@ -178,14 +176,12 @@ public class MainActivity extends ActionBarActivity
     @Override
     public void onNoneItemInList() {
         if (!mIsShowCollection){
-            //showHintInDetailContainerOrToast("电影列表暂无数据，数据正在加载中，请稍等");
             handler.sendEmptyMessage(MSG_NONE_ITEM_IN_LIST);
         }
     }
 
     @Override
     public void onFirstLoadingFinished() {
-        //showHintInDetailContainerOrToast("数据加载完毕，请点击海报查看电影详细信息");
         handler.sendEmptyMessage(MSG_FIRST_LOADING_FINISHED);
     }
 

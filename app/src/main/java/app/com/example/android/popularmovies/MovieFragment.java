@@ -33,7 +33,6 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 
 import app.com.example.android.popularmovies.data.MovieContract;
-import app.com.example.android.popularmovies.sync.PopularMoviesSyncAdapter;
 
 import static app.com.example.android.popularmovies.data.MovieContract.MovieEntry.COLUMN_POPULAR_RANK;
 
@@ -198,10 +197,6 @@ public class MovieFragment extends Fragment {
         super.onStart();
     }
 
-    private void updateMovie() {
-        PopularMoviesSyncAdapter.syncImmediately(getActivity());
-    }
-
     void onModeChanged(boolean isShowCollection ) {
         if (isShowCollection) {
             getLoaderManager().restartLoader(COLLECTION_LOADER, null, new CollectionLoaderCallbacks());
@@ -267,12 +262,13 @@ public class MovieFragment extends Fragment {
         @Override
         public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
             mMovieAdapter.swapCursor(cursor);
-            Log.v("onLoadFinished", cursor.toString());
             if (mPosition != GridView.INVALID_POSITION) {
                 // If we don't need to restart the loader, and there's a desired position to restore
                 // to, do so now.
                 mGridView.smoothScrollToPosition(mPosition);
             }
+
+            //第一次加载数据库里没有数据，给予用户提示
             if (!cursor.moveToFirst()){
                 ((Callback) getActivity()).onNoneItemInList();
                 Log.d(LOG_TAG,"onNoneItemInList");

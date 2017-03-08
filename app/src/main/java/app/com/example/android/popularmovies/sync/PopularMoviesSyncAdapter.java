@@ -218,7 +218,6 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                 JSONArray movieArray = rankJson.getJSONArray(OWM_LIST);
 
                 int numberOfMovie = movieArray.length();
-//                int numberOfMovie = 4;
 
                 if (numberOfMovie == 1){
                     firstRankId = -1;
