@@ -23,6 +23,8 @@ public class MainActivity extends ActionBarActivity
     private static final int MSG_NONE_ITEM_IN_LIST = 1001;
     private static final int  MSG_FIRST_LOADING_FINISHED = 1002;
 
+    private static final String ISSHOWCOLLECTION_KEY = "isshwocollection";
+
     private boolean mTwoPane;
 
     private String mMode;
@@ -51,6 +53,15 @@ public class MainActivity extends ActionBarActivity
         } else {
             mTwoPane = false;
             getSupportActionBar().setElevation(0f);
+        }
+
+        //读取是否收藏
+        if (savedInstanceState != null) {
+            Log.d(LOG_TAG, "savedInstanceState isn't null");
+            if (savedInstanceState.containsKey(ISSHOWCOLLECTION_KEY)){
+                mIsShowCollection = savedInstanceState.getBoolean(ISSHOWCOLLECTION_KEY);
+                Log.d("onCreate","mIsShowCollection is " + mIsShowCollection);
+            }
         }
 
         PopularMoviesSyncAdapter.initializeSyncAdapter(this);
@@ -164,6 +175,15 @@ public class MainActivity extends ActionBarActivity
             startActivity(intent);
             Log.d("Click","mTwoPane is false ");
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        // When tablets rotate, the currently selected list item needs to be saved.
+        // When no item is selected, mPosition will be set to Listview.INVALID_POSITION,
+        // so check for that before storing.
+        outState.putBoolean(ISSHOWCOLLECTION_KEY, mIsShowCollection);
+        super.onSaveInstanceState(outState);
     }
 
     @Override
