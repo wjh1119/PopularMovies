@@ -24,8 +24,6 @@ public class Utility {
 
         final String LOG_TAG = "getImageFromUrl";
 
-        Bitmap bitmap;
-
         HttpURLConnection urlConnection = null;
 
         try {
@@ -41,7 +39,7 @@ public class Utility {
                 return null;
             }
 
-            bitmap= BitmapFactory.decodeStream(inputStream);
+            Bitmap bitmap= BitmapFactory.decodeStream(inputStream);
             inputStream.close();
             Log.v("getImageFromUrl","url is: " + imageUrl);
             return bitmap;

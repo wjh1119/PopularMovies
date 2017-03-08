@@ -1,0 +1,139 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="app.com.example.android.popularmovies.DetailFragment"
+    android:background="@color/movie_detail_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/movie_detail_name"
+            tools:text="title"
+            android:textSize="@dimen/detail_title_textsize"
+            android:textColor="@color/detail_title_textcolor"
+            android:padding="@dimen/detail_title_padding"
+            android:background="@color/detail_title_background"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+            <ImageView
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                tools:src="@mipmap/test"
+                android:layout_width="0dp"
+                android:layout_weight="0.5"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:id="@+id/movie_detail_image"
+                android:adjustViewBounds="true"
+                />
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.5"
+                android:weightSum="1"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/movie_detail_date"
+                    tools:text="time"
+                    android:textSize="@dimen/detail_date_textsize"
+                    android:textColor="@color/detail_date_textcolor"
+                    android:padding="@dimen/detail_date_padding"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+                <TextView
+                    android:id="@+id/movie_detail_vote_average"
+                    tools:text="8.0"
+                    android:textSize="@dimen/datail_popularity_textsize"
+                    android:textColor="@color/detail_popularity_textcolor"
+                    android:padding="@dimen/datail_popularity_padding"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+                <TextView
+                    android:id="@+id/movie_detail_runtime"
+                    tools:text="180"
+                    android:textSize="@dimen/datail_runtime_textsize"
+                    android:textColor="@color/detail_runtime_textcolor"
+                    android:padding="@dimen/datail_runtime_padding"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+                <!--<Button-->
+                    <!--android:layout_width="30dp"-->
+                    <!--android:layout_height="30dp"-->
+                    <!--android:background="@drawable/ic_favorite_border_black_24dp"/>-->
+            </LinearLayout>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/movie_detail_overview_close"
+            tools:text="电影简介-收起"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/datail_overview_padding"
+            android:maxLines="3"
+            android:textSize="@dimen/datail_overview_textsize"
+            android:textColor="@color/detail_overview_textcolor" />
+
+        <TextView
+            android:id="@+id/movie_detail_overview_open"
+            tools:text="电影简介-展开"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:padding="@dimen/datail_overview_padding"
+            android:textSize="@dimen/datail_overview_textsize"
+            android:textColor="@color/detail_overview_textcolor" />
+
+        <TextView
+            android:id="@+id/movie_detail_overview_openOrClose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            tools:text="展开"
+            android:textColor="#0099FF"
+            android:padding="@dimen/datail_overview_padding"
+            android:layout_gravity="right"
+            android:onClick="onClick"/>
+        <TextView
+            android:id="@+id/movie_detail_videos"
+            android:text="@string/movie_detail_videos_title_text"
+            android:textSize="@dimen/datail_videos_title_textsize"
+            android:background="@color/detail_videos_title_background_color"
+            android:textColor="@color/detail_videos_title_textcolor"
+            android:padding="@dimen/datail_videos_padding"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <app.com.example.android.popularmovies.UnScrollListView
+                android:id="@+id/movie_detail_videos_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                />
+        </FrameLayout>
+        <TextView
+            android:id="@+id/movie_detail_reviews"
+            android:text="@string/movie_detail_reviews_title_text"
+            android:textSize="@dimen/datail_reviews_title_textsize"
+            android:background="@color/detail_reviews_title_background_color"
+            android:textColor="@color/detail_reviews_title_textcolor"
+            android:padding="@dimen/datail_reviews_padding"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <app.com.example.android.popularmovies.UnScrollListView
+                android:id="@+id/movie_detail_reviews_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                />
+        </FrameLayout>
+    </LinearLayout>
+
+</ScrollView>

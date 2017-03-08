@@ -1,0 +1,17 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="app.com.example.android.popularmovies.HintFragment"
+    android:background="@color/hint_background">
+    <TextView
+        android:id="@+id/hint_textview"
+        tools:text="hint"
+        android:textSize="@dimen/hint_textsize"
+        android:textColor="@color/hint_textcolor"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"/>
+</LinearLayout>

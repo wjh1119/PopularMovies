@@ -1,4 +1,4 @@
-package app.com.example.android.popularmovies;
+package app.com.example.android.popularmovies.AsyncTask;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -6,9 +6,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
-import android.util.Log;
 
 import java.util.HashMap;
+
+import app.com.example.android.popularmovies.DetailFragment;
 
 import static app.com.example.android.popularmovies.DetailFragment.COL_OVERVIEW;
 import static app.com.example.android.popularmovies.DetailFragment.COL_RELEASE_DATE;
@@ -43,7 +44,6 @@ public class FetchDetailTask extends AsyncTask<Cursor, Void, HashMap> {
 
         HashMap detailHashMap = new HashMap();
         mData = params[0];
-        Log.d(LOG_TAG,"mmData:" + mData);
         try {
 
             //载入电影名字

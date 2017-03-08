@@ -4,7 +4,6 @@ import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.net.Uri;
 import android.provider.BaseColumns;
-import android.util.Log;
 
 /**
  * Created by Mr.King on 2017/2/13 0013.
@@ -47,8 +46,6 @@ public class MovieContract {
         public static final String COLUMN_POSTER_PATH = "poster_path";
         public static final String COLUMN_POSTER_IMAGE = "poster_image";
 
-        // In order to uniquely pinpoint the location on the map when we launch the
-        // map intent, we store the latitude and longitude as returned by openweathermap.
         public static final String COLUMN_ADULT = "adult";
         public static final String COLUMN_OVERVIEW = "overview";
         public static final String COLUMN_RELEASE_DATE = "release_rate";
@@ -61,15 +58,16 @@ public class MovieContract {
         public static final String COLUMN_VIDEO = "video";
         public static final String COLUMN_VOTE_AVERAGE = "vote_average";
 
-        //weather the movie is collected
+        //whether the movie is collected
         public static final String COLUMN_COLLECT = "collect";
 
         //movie's runtime
         public static final String COLUMN_RUNTIME = "runtime";
 
-        //
+        //movie's rank
         public static final String COLUMN_POPULAR_RANK = "popular_rank";
         public static final String COLUMN_TOPRATED_RANK = "toprated_rank";
+
         public static final String COLUMN_REVIEWS = "reviews";
         public static final String COLUMN_VIDEOS = "videos";
 
@@ -79,23 +77,17 @@ public class MovieContract {
 
         public static Uri buildMovieWithModeUri(
                 String mode) {
-            Log.v("buildUri","mode is " + mode + "uri is " + CONTENT_URI.buildUpon().appendPath(mode)
-                    .build().toString());
             return CONTENT_URI.buildUpon().appendPath(mode).build();
         }
 
         public static Uri buildMovieWithModeAndRankUri(
                 String mode, int rank) {
-            Log.v("intent build","rank is " + rank + "uri is " + CONTENT_URI.buildUpon().appendPath(mode)
-                    .appendPath(Integer.toString(rank)).build().toString());
             return CONTENT_URI.buildUpon().appendPath(mode)
                     .appendPath(Integer.toString(rank)).build();
         }
 
         public static Uri buildMovieWithModeAndCollectUri(
                 String mode) {
-            Log.v("intent build","uri is " + CONTENT_URI.buildUpon().appendPath(mode)
-                    .appendPath("c").build().toString());
             return CONTENT_URI.buildUpon().appendPath(mode)
                     .appendPath("c").build();
         }

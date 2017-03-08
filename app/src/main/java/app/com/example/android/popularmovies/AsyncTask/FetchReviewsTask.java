@@ -1,15 +1,16 @@
-package app.com.example.android.popularmovies;
+package app.com.example.android.popularmovies.AsyncTask;
 
 import android.content.Context;
 import android.database.Cursor;
 import android.os.AsyncTask;
-import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import app.com.example.android.popularmovies.R;
 
 import static app.com.example.android.popularmovies.DetailFragment.COL_REVIEWS;
 
@@ -40,7 +41,6 @@ public class FetchReviewsTask extends AsyncTask<Cursor, Void, ArrayList<HashMap>
 
         ArrayList<HashMap> reviewsDataArray = new ArrayList<>();
         mData = params[0];
-        Log.d(LOG_TAG,"mdata:" + mData);
         try {
 
             String reviewsJsonStr = mData.getString(COL_REVIEWS);

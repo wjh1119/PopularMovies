@@ -24,25 +24,17 @@ public class MovieAdapter extends CursorAdapter {
         super(context, c, flags);
     }
 
-    /*
-        This is ported from FetchWeatherTask --- but now we go straight from the cursor to the
-        string.
-     */
-    private String convertCursorRowToPosterPath(Cursor cursor) {
-        String posterPath = cursor.getString(MovieFragment.COL_POSTER_PATH);
-        return posterPath;
-    }
-
     private BitmapDrawable convertCursorRowToPosterImage(Cursor cursor) {
         byte[] imageBlob = cursor.getBlob(MovieFragment.COL_POSTER_IMAGE);
         Bitmap bitmap = BitmapFactory.decodeByteArray(imageBlob, 0, imageBlob.length);
-        BitmapDrawable bitmapDrawable = new BitmapDrawable(bitmap);
+        Bitmap resizeBitmap = Bitmap.createScaledBitmap(bitmap, 120, 180, true);
+        BitmapDrawable bitmapDrawable = new BitmapDrawable(resizeBitmap);
         return bitmapDrawable;
     }
 
     /*
-        Remember that these views are reused as needed.
-     */
+                    Remember that these views are reused as needed.
+                 */
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
         View view = LayoutInflater.from(context).inflate(R.layout.grid_item_movies, parent, false);
@@ -58,22 +50,12 @@ public class MovieAdapter extends CursorAdapter {
         // our view is pretty simple here --- just a text view
         // we'll keep the UI functional with a simple (and slow!) binding.
 
-        String posterPath = convertCursorRowToPosterPath(cursor);
-        //Log.v("adapter",posterPath);
         DisplayMetrics displayMetrics = new DisplayMetrics();
         ((Activity) context).getWindowManager()
                 .getDefaultDisplay()
                 .getMetrics(displayMetrics);
 
         ImageView imageView = (ImageView) view;
-
-        int width = displayMetrics.widthPixels;// 屏幕宽度（像素）
-        int height= displayMetrics.heightPixels; // 屏幕高度（像素）
-
-        ViewGroup.LayoutParams layoutParams = imageView.getLayoutParams();
-        layoutParams.width = width / 2;
-        layoutParams.height = layoutParams.width * 3 / 2;
-        imageView.setLayoutParams(layoutParams);
 
         imageView.setImageDrawable(convertCursorRowToPosterImage(cursor));
     }

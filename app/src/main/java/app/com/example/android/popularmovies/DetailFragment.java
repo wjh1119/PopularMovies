@@ -1,9 +1,8 @@
 package app.com.example.android.popularmovies;
 
-import android.content.ContentValues;
-import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -23,10 +22,13 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import app.com.example.android.popularmovies.AsyncTask.FetchDetailTask;
+import app.com.example.android.popularmovies.AsyncTask.FetchReviewsTask;
+import app.com.example.android.popularmovies.AsyncTask.FetchVideosTask;
+import app.com.example.android.popularmovies.AsyncTask.UpdateCollectTask;
 import app.com.example.android.popularmovies.data.MovieContract;
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.Unbinder;
 
 /**
  * Created by Mr.King on 2017/2/17 0017.
@@ -34,6 +36,7 @@ import butterknife.Unbinder;
 
 public class DetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     private static final String LOG_TAG = DetailFragment.class.getSimpleName();
+    static final String DETAIL_URI = "URI";
 
     //使用Butter knife对id和view进行连接
     @BindView(R.id.movie_detail_name)
@@ -51,11 +54,9 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     UnScrollListView videosListView;
     @BindView(R.id.movie_detail_image) ImageView imageView;
 
-    private Unbinder unbinder;
-
     private String mMovieId;
 
-    private String mIsCollect = null;
+    private String mIsCollect = "false";
 
     private View mView;
 
@@ -63,15 +64,16 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
 
     private MenuItem mCollectMenuItem;
 
+    private Uri mUri;
+
     private static final int DETAIL_LOADER = 0;
 
     public static final String[] MOVIE_COLUMNS = {
             // In this case the id needs to be fully qualified with a table name, since
             // the content provider joins the location & weather tables in the background
             // (both have an _id column)
-            // On the one hand, that's annoying.  On the other, you can search the weather table
-            // using the location set by the user, which is only in the Location table.
-            // So the convenience is worth it.
+            // On the one hand, that's annoying.  On the other, you can search the movie table
+            // using the mode set by the user.
 
             MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry._ID,
             MovieContract.MovieEntry.COLUMN_POSTER_IMAGE,
@@ -82,29 +84,25 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE,
             MovieContract.MovieEntry.COLUMN_COLLECT,
             MovieContract.MovieEntry.COLUMN_RUNTIME,
-
-            //排名
             MovieContract.MovieEntry.COLUMN_REVIEWS,
             MovieContract.MovieEntry.COLUMN_VIDEOS,
     };
 
-    static final int _ID = 0;
-    static final int COL_POSTER_IMAGE = 1;
-    static final int COL_OVERVIEW = 2;
-    static final int COL_RELEASE_DATE = 3;
-    static final int COL_ID = 4;
-    static final int COL_TITLE= 5;
-    static final int COL_VOTE_AVERAGE = 6;
+    public static final int _ID = 0;
+    public static final int COL_POSTER_IMAGE = 1;
+    public static final int COL_OVERVIEW = 2;
+    public static final int COL_RELEASE_DATE = 3;
+    public static final int COL_ID = 4;
+    public static final int COL_TITLE= 5;
+    public static final int COL_VOTE_AVERAGE = 6;
 
-    //weather the movie is collected
-    static final int COL_COLLECT = 7;
+    //whather the movie is collected
+    public static final int COL_COLLECT = 7;
 
     //movie's runtime
-    static final int COL_RUNTIME = 8;
-
-    //
-    static final int COL_REVIEWS = 9;
-    static final int COL_VIDEOS = 10;
+    public static final int COL_RUNTIME = 8;
+    public static final int COL_REVIEWS = 9;
+    public static final int COL_VIDEOS = 10;
 
     public DetailFragment() {
         setHasOptionsMenu(true);
@@ -115,6 +113,11 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
                              Bundle savedInstanceState) {
         mView = inflater.inflate(R.layout.fragment_detail, container, false);
 
+        //获取Uri
+        Bundle arguments = getArguments();
+        if (arguments != null) {
+            mUri = arguments.getParcelable(DetailFragment.DETAIL_URI);
+        }
         return mView;
     }
 
@@ -135,10 +138,8 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         //判断该电影是否被收藏，并以此显示对应的菜单“收藏”或“取消收藏”。
         if (mIsCollect != null) {
             if (mIsCollect.equals("true")){
-                //menuItem.setTitle(R.string.action_collect_cancel); //"取消收藏“
                 mCollectMenuItem.setIcon(R.drawable.ic_favorite_white_24dp);
             }else{
-                //menuItem.setTitle(R.string.action_collect);//”收藏
                 mCollectMenuItem.setIcon(R.drawable.ic_favorite_border_white_24dp);
             }
         }else{
@@ -158,68 +159,51 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             Log.v(LOG_TAG,"click");
             if(mIsCollect.equals("false")){//“收藏”
                 Toast.makeText(getContext(),"收藏成功", Toast.LENGTH_LONG).show();
-                //item.setTitle(getString(R.string.action_collect_cancel));//“取消收藏”
                 item.setIcon(R.drawable.ic_favorite_white_24dp);
-                updateCollect("true");
+                //更新电影的collect值
+                UpdateCollectTask updateCollectTask = new UpdateCollectTask(getContext());
+                updateCollectTask.execute("true",mMovieId);
                 mIsCollect = "true";
             }else{
                 Toast.makeText(getContext(),"取消收藏", Toast.LENGTH_LONG).show();
-                //item.setTitle(getString(R.string.action_collect));//“收藏”
                 item.setIcon(R.drawable.ic_favorite_border_white_24dp);
-                updateCollect("false");
+                //更新电影的collect值
+                UpdateCollectTask updateCollectTask = new UpdateCollectTask(getContext());
+                updateCollectTask.execute("false",mMovieId);
                 mIsCollect = "false";
+                //告知MainActivity该电影取消收藏
+                ((Callback) getActivity()).onCancelCollection();
             }
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private void updateCollect(String isCollect){
-
-        //更新数据库中影片的收藏值
-        if (mMovieId != null && isCollect != null) {
-            ContentValues values = new ContentValues();
-            values.put(MovieContract.MovieEntry.COLUMN_COLLECT, isCollect);
-            String selection = MovieContract.MovieEntry.TABLE_NAME+
-                    "." + MovieContract.MovieEntry.COLUMN_ID + " = ? ";
-            String[] selectionArgs = new String[]{mMovieId};
-            getContext().getContentResolver().update(MovieContract.MovieEntry.CONTENT_URI,values,selection,selectionArgs);
-            mIsCollect = isCollect;
-        }else{
-            Toast.makeText(getContext(),"数据正在加载，请稍后再试", Toast.LENGTH_LONG).show();
-        }
-    }
-
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Log.v(LOG_TAG, "In onCreateLoader");
-        Intent intent = getActivity().getIntent();
-        if (intent == null) {
-            return null;
-        }
-        Log.v(LOG_TAG,intent.getData().toString());
 
         // Now create and return a CursorLoader that will take care of
         // creating a Cursor for the data being displayed.
-        return new CursorLoader(
-                getActivity(),
-                intent.getData(),
-                MOVIE_COLUMNS,
-                null,
-                null,
-                null
-        );
+        if ( null != mUri ) {
+            return new CursorLoader(
+                    getActivity(),
+                    mUri,
+                    MOVIE_COLUMNS,
+                    null,
+                    null,
+                    null
+            );
+        }
+        return null;
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
         if (!data.moveToFirst()) { return; }
-
-        Log.d(LOG_TAG,Thread.currentThread().getName());
         mData = data;
         //ButterKnife连接
-        unbinder = ButterKnife.bind(DetailFragment.this, mView);
+        ButterKnife.bind(DetailFragment.this, mView);
 
         FetchDetailTask fetchDetailTask = new FetchDetailTask(getContext());
         fetchDetailTask.setOnDataFinishedListener(new FetchDetailTask.OnDataFinishedListener(){
@@ -227,65 +211,67 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             public void onDataSuccessfully(Object data) {
                 HashMap detailDataArray = (HashMap) data;
 
-                //载入电影名字
-                String name = (String) detailDataArray.get("name");
-                nameTextView.setText(name);
-                nameTextView.setFocusable(true);
-                nameTextView.setFocusableInTouchMode(true);
-                nameTextView.requestFocus();
+                if(isAdded()){
+                    //载入电影名字
+                    String name = (String) detailDataArray.get("name");
+                    nameTextView.setText(name);
+                    nameTextView.setFocusable(true);
+                    nameTextView.setFocusableInTouchMode(true);
+                    nameTextView.requestFocus();
 
-                //载入电影图片
-                BitmapDrawable bitmapDrawable = (BitmapDrawable) detailDataArray
-                        .get("bitmapDrawable");
-                imageView.setImageDrawable(bitmapDrawable);
+                    //载入电影图片
+                    BitmapDrawable bitmapDrawable = (BitmapDrawable) detailDataArray
+                            .get("bitmapDrawable");
+                    imageView.setImageDrawable(bitmapDrawable);
 
-                mMovieId = (String) detailDataArray.get("movieId");
-                mIsCollect = (String) detailDataArray.get("isCollect");
-                //判断mCollectMenuItem是否加载
-                if (mCollectMenuItem != null) {
-                    if (mIsCollect.equals("true")){
-                        //menuItem.setTitle(R.string.action_collect_cancel); //"取消收藏“
-                        mCollectMenuItem.setIcon(R.drawable.ic_favorite_white_24dp);
-                    }else{
-                        //menuItem.setTitle(R.string.action_collect);//”收藏
-                        mCollectMenuItem.setIcon(R.drawable.ic_favorite_border_white_24dp);
-                    }
-                }else{
-                    Log.d(LOG_TAG,"mIsCollect is null");
-                }
-
-                //载入电影上映日期
-                String date = (String) detailDataArray.get("date");
-                dateTextView.setText(date);
-
-                //载入电影评分
-                String voteAverage = (String) detailDataArray.get("voteAverage");
-                voteAverageTextView.setText(voteAverage+getString(R.string.movie_detail_voteAverage_extraText));
-
-                //movie's runtime
-                int runtime = (int) detailDataArray.get("runtime");
-                runtimeTextView.setText(runtime + getString(R.string.movie_detail_runtime_extraText));
-
-                //载入电影简介，并实现展开收起的功能
-                String overview = (String) detailDataArray.get("overview");
-                overviewCloseTextView.setText(overview);
-                overviewOpenTextView.setText(overview);
-                overviewOpenTextView.setVisibility(View.GONE);
-                overviewOpenOrCloseTextView.setText(R.string.movie_detail_overview_open);
-                overviewOpenOrCloseTextView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if(overviewCloseTextView.getVisibility() == View.VISIBLE){
-                            overviewCloseTextView.setVisibility(View.GONE);
-                            overviewOpenTextView.setVisibility(View.VISIBLE);
-                            overviewOpenOrCloseTextView.setText(R.string.movie_detail_overview_close);
+                    mMovieId = (String) detailDataArray.get("movieId");
+                    mIsCollect = (String) detailDataArray.get("isCollect");
+                    //判断mCollectMenuItem是否加载
+                    if (mCollectMenuItem != null && mIsCollect != null) {
+                        if (mIsCollect.equals("true")){
+                            //menuItem.setTitle(R.string.action_collect_cancel); //"取消收藏“
+                            mCollectMenuItem.setIcon(R.drawable.ic_favorite_white_24dp);
                         }else{
-                            overviewCloseTextView.setVisibility(View.VISIBLE);
-                            overviewOpenTextView.setVisibility(View.GONE);
-                            overviewOpenOrCloseTextView.setText(R.string.movie_detail_overview_open);
+                            //menuItem.setTitle(R.string.action_collect);//”收藏
+                            mCollectMenuItem.setIcon(R.drawable.ic_favorite_border_white_24dp);
                         }
+                    }else{
+                        Log.d(LOG_TAG,"mIsCollect is null");
                     }
-                });
+
+                    //载入电影上映日期
+                    String date = (String) detailDataArray.get("date");
+                    dateTextView.setText(date);
+
+                    //载入电影评分
+                    String voteAverage = (String) detailDataArray.get("voteAverage");
+                    voteAverageTextView.setText(voteAverage+getString(R.string.movie_detail_voteAverage_extraText));
+
+                    //movie's runtime
+                    int runtime = (int) detailDataArray.get("runtime");
+                    runtimeTextView.setText(runtime + getString(R.string.movie_detail_runtime_extraText));
+
+                    //载入电影简介，并实现展开收起的功能
+                    String overview = (String) detailDataArray.get("overview");
+                    overviewCloseTextView.setText(overview);
+                    overviewOpenTextView.setText(overview);
+                    overviewOpenTextView.setVisibility(View.GONE);
+                    overviewOpenOrCloseTextView.setText(R.string.movie_detail_overview_open);
+                    overviewOpenOrCloseTextView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if(overviewCloseTextView.getVisibility() == View.VISIBLE){
+                                overviewCloseTextView.setVisibility(View.GONE);
+                                overviewOpenTextView.setVisibility(View.VISIBLE);
+                                overviewOpenOrCloseTextView.setText(R.string.movie_detail_overview_close);
+                            }else{
+                                overviewCloseTextView.setVisibility(View.VISIBLE);
+                                overviewOpenTextView.setVisibility(View.GONE);
+                                overviewOpenOrCloseTextView.setText(R.string.movie_detail_overview_open);
+                            }
+                        }
+                    });
+                }
             }
 
             @Override
@@ -324,7 +310,6 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             }
         });
         fetchVideosTask.execute(mData);
-
     }
 
     @Override
@@ -333,6 +318,9 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        unbinder.unbind();
+    }
+
+    public interface Callback {
+        void onCancelCollection();
     }
 }

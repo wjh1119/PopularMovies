@@ -15,9 +15,6 @@
  */
 package app.com.example.android.popularmovies;
 
-import android.app.ProgressDialog;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -26,7 +23,6 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -35,7 +31,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
-import android.widget.Toast;
 
 import app.com.example.android.popularmovies.data.MovieContract;
 
@@ -47,13 +42,17 @@ import static app.com.example.android.popularmovies.data.MovieContract.MovieEntr
 public class MovieFragment extends Fragment {
 
     String LOG_TAG = MovieFragment.class.getSimpleName();
-    public static ProgressDialog progressDialog;
     private static final int MOVIE_LOADER = 0;
     private static final int COLLECTION_LOADER = 1;
+    private boolean mIsShowCollection = false;
+    private boolean mIsFirstLoading = false;
 
-    private static boolean mIsShowCollection = false;
+    private GridView mGridView;
+    private int mPosition = GridView.INVALID_POSITION;
 
-    FetchMovieTask mMovieTask;
+    private static final String SELECTED_KEY = "selected_position";
+    private static final String ISSHOWCOLLECTION_KEY = "isshwocollection_position";
+
     // For the forecast view we're showing only a small subset of the stored data.
     // Specify the columns we need.
     public static final String[] MOVIE_COLUMNS = {
@@ -91,49 +90,8 @@ public class MovieFragment extends Fragment {
         super.onCreate(savedInstanceState);
         // Add this line in order for this fragment to handle menu events.
         setHasOptionsMenu(true);
-
-        progressDialog=new ProgressDialog(getContext());
-        progressDialog.setIcon(R.mipmap.ic_launcher);
-        progressDialog.setTitle("提示信息");
-        progressDialog.setMessage("正在下载，请稍候...");
-        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        progressDialog.setCancelable(false);
-        progressDialog.setOnKeyListener(mOnKeyListener);
-        progressDialog.setOnDismissListener(mOnDismissListener);
     }
 
-    private ProgressDialog.OnKeyListener mOnKeyListener = new DialogInterface.OnKeyListener() {
-        @Override
-        public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
-            //当用户按下返回键(有可能是虚拟键，也有可能是实体键，总之是返回键)
-            if (keyCode == KeyEvent.KEYCODE_BACK) {
-                dialog.dismiss();
-                return true;
-            }
-            return false;
-        }
-    };
-
-    private ProgressDialog.OnDismissListener mOnDismissListener = new DialogInterface.OnDismissListener() {
-        @Override
-        public void onDismiss(DialogInterface dialog) {
-            //在这里对你的后台任务(AsyncTask)进行处理,及提示相关的语句(已终止下载等等)
-            if (mMovieTask!=null){
-                mMovieTask.cancel(true);
-                mMovieTask = null;
-            }
-        }
-    };
-
-    @Override
-    public void onStop() {
-        //避免一些异常情况导致progressDialog没有dismiss
-        if (progressDialog != null && progressDialog.isShowing()) {
-            progressDialog.dismiss();
-            progressDialog = null;
-        }
-        super.onStop();
-    }
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.rankfragment, menu);
@@ -145,24 +103,10 @@ public class MovieFragment extends Fragment {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_refresh) {
-            updateMovie();
-            return true;
-        }
-        if (id == R.id.action_showCollection) {
-            if(item.getTitle().equals(getString(R.string.action_showCollection))){//“我的收藏列表”
-                item.setTitle(getString(R.string.action_showCollection_showAllMovies));//“全部电影列表”
-                getLoaderManager().destroyLoader(MOVIE_LOADER);
-                getLoaderManager().initLoader(COLLECTION_LOADER,null,new CollectionLoaderCallbacks());
-                mIsShowCollection = true;
-            }else{
-                item.setTitle(getString(R.string.action_showCollection));//“我的收藏列表”
-                getLoaderManager().destroyLoader(COLLECTION_LOADER);
-                getLoaderManager().initLoader(MOVIE_LOADER,null,new MoviesLoaderCallbacks());
-                mIsShowCollection = false;
-            }
-            return true;
-        }
+//        if (id == R.id.action_refresh) {
+//            updateMovie();
+//            return true;
+//        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -176,11 +120,11 @@ public class MovieFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         // Get a reference to the ListView, and attach this adapter to it.
-        GridView gridView = (GridView) rootView.findViewById(R.id.grid_fragment);
-        gridView.setAdapter(mMovieAdapter);
+        mGridView = (GridView) rootView.findViewById(R.id.grid_fragment);
+        mGridView.setAdapter(mMovieAdapter);
 
         // We'll call our MainActivity
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
@@ -189,19 +133,18 @@ public class MovieFragment extends Fragment {
                 Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
                 if (cursor != null) {
                     String mode = Utility.getPreferredMode(getActivity());
-                    Intent intent = null;
                     Log.v("intent","cursor" +" popular rank: " + cursor.getInt(COL_POPULAR_RANK) +
                             ", toprated rank: "+ cursor.getInt(COL_TOPRATED_RANK));
                     if (mode.equals("popular")){
-                        intent = new Intent(getActivity(), DetailActivity.class)
-                                .setData(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
+                        ((Callback) getActivity())
+                                .onItemSelected(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
                                         mode, cursor.getInt(COL_POPULAR_RANK)
                                 ));
                         Log.v("intent","sent intent with mode: "+ mode +" and rank: "
                                 + cursor.getInt(COL_POPULAR_RANK));
                     }else if (mode.equals("toprated")){
-                        intent = new Intent(getActivity(), DetailActivity.class)
-                                .setData(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
+                        ((Callback) getActivity())
+                                .onItemSelected(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
                                         mode, cursor.getInt(COL_TOPRATED_RANK)
                                 ));
                         Log.v("intent","sent intent with mode: "+ mode +" and rank: "
@@ -209,48 +152,90 @@ public class MovieFragment extends Fragment {
                     }else{
                         Log.e("intent","mode is wrong");
                     }
-                    startActivity(intent);
                 }
             }
         });
+
+
+        // If there's instance state, mine it for useful information.
+        // The end-goal here is that the user never knows that turning their device sideways
+        // does crazy lifecycle related things.  It should feel like some stuff stretched out,
+        // or magically appeared to take advantage of room, but data or place in the app was never
+        // actually *lost*.
+        if (savedInstanceState != null) {
+            Log.d(LOG_TAG, "savedInstanceState isn't null");
+            if (savedInstanceState.containsKey(SELECTED_KEY)){
+                // The gridview probably hasn't even been populated yet.  Actually perform the
+                // swapout in onLoadFinished.
+                mPosition = savedInstanceState.getInt(SELECTED_KEY);
+            }
+            if (savedInstanceState.containsKey(ISSHOWCOLLECTION_KEY)){
+                // The gridview probably hasn't even been populated yet.  Actually perform the
+                // swapout in onLoadFinished.
+                mIsShowCollection = savedInstanceState.getBoolean(ISSHOWCOLLECTION_KEY);
+                Log.d("onCreateView","mIsShowCollection is " + mIsShowCollection);
+            }
+        }
         return rootView;
     }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        getLoaderManager().initLoader(MOVIE_LOADER, null, new MoviesLoaderCallbacks());
+        Log.d("onActivityCreated","mIsShowCollection is " + mIsShowCollection);
+        if (mIsShowCollection){
+            getLoaderManager().destroyLoader(MOVIE_LOADER);
+            getLoaderManager().initLoader(COLLECTION_LOADER, null, new CollectionLoaderCallbacks());
+        }else{
+            getLoaderManager().destroyLoader(COLLECTION_LOADER);
+            getLoaderManager().initLoader(MOVIE_LOADER, null, new MoviesLoaderCallbacks());
+        }
         super.onActivityCreated(savedInstanceState);
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        if (mMovieAdapter.getCount() == 0){
-            Toast.makeText(getActivity(), "请点击菜单中的刷新获取电影排名", Toast.LENGTH_SHORT).show();
-        }else{
-        }
     }
 
-    private void updateMovie() {
-        getContext().deleteDatabase(MovieContract.MovieEntry.TABLE_NAME);
-        mMovieTask = new FetchMovieTask(getActivity());
-        //mMovieTask.cancel(false);
-        mMovieTask.execute();
-    }
-
-    void onModeChanged( ) {
-        if (mIsShowCollection) {
+    void onModeChanged(boolean isShowCollection ) {
+        if (isShowCollection) {
             getLoaderManager().restartLoader(COLLECTION_LOADER, null, new CollectionLoaderCallbacks());
         }else{
             getLoaderManager().restartLoader(MOVIE_LOADER, null, new MoviesLoaderCallbacks());
         }
-        Log.v(LOG_TAG,"mode changed");
+        mGridView.smoothScrollToPosition(0);
+    }
+
+    void onIsShowCollectionChanged(boolean isShowCollection){
+        if(isShowCollection){//“我的收藏列表”
+            getLoaderManager().destroyLoader(MOVIE_LOADER);
+            getLoaderManager().restartLoader(COLLECTION_LOADER,null,new CollectionLoaderCallbacks());
+        }else{
+            getLoaderManager().destroyLoader(COLLECTION_LOADER);
+            getLoaderManager().restartLoader(MOVIE_LOADER,null,new MoviesLoaderCallbacks());
+        }
+        mIsShowCollection = isShowCollection;
+
+        Log.d("onIsShowCoChanged","isShowcollection is " + isShowCollection);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        // When tablets rotate, the currently selected list item needs to be saved.
+        // When no item is selected, mPosition will be set to Listview.INVALID_POSITION,
+        // so check for that before storing.
+        if (mPosition != GridView.INVALID_POSITION) {
+            outState.putInt(SELECTED_KEY, mPosition);
+        }
+        outState.putBoolean(ISSHOWCOLLECTION_KEY, mIsShowCollection);
+        super.onSaveInstanceState(outState);
     }
 
     private class MoviesLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor>{
         @Override
         public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
             String mode = Utility.getPreferredMode(getActivity());
+            Log.d(LOG_TAG,"onCreateLoader mode is " + mode);
 
             String sortOrder = MovieContract.MovieEntry.COLUMN_ID + " ASC";
             if (mode.equals("popular")){
@@ -277,7 +262,23 @@ public class MovieFragment extends Fragment {
         @Override
         public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
             mMovieAdapter.swapCursor(cursor);
-            Log.v("onLoadFinished", cursor.toString());
+            if (mPosition != GridView.INVALID_POSITION) {
+                // If we don't need to restart the loader, and there's a desired position to restore
+                // to, do so now.
+                mGridView.smoothScrollToPosition(mPosition);
+            }
+
+            //第一次加载数据库里没有数据，给予用户提示
+            if (!cursor.moveToFirst()){
+                ((Callback) getActivity()).onNoneItemInList();
+                Log.d(LOG_TAG,"onNoneItemInList");
+                mIsFirstLoading = true;
+            }
+            if(cursor.moveToFirst() && mIsFirstLoading){
+                ((Callback) getActivity()).onFirstLoadingFinished();
+                Log.d(LOG_TAG,"onFirstLoadingFinished");
+                mIsFirstLoading = false;
+            }
         }
 
         @Override
@@ -315,13 +316,24 @@ public class MovieFragment extends Fragment {
         @Override
         public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
             mMovieAdapter.swapCursor(cursor);
-            Log.v("onLoadFinished", cursor.toString());
+            Log.d("onLoadFinished","onLoadFinished" );
+            if (mPosition != GridView.INVALID_POSITION) {
+                // If we don't need to restart the loader, and there's a desired position to restore
+                // to, do so now.
+                mGridView.smoothScrollToPosition(mPosition);
+            }
         }
 
         @Override
         public void onLoaderReset(Loader<Cursor> cursorLoader) {
             mMovieAdapter.swapCursor(null);
         }
+    }
+
+    public interface Callback {
+        void onItemSelected(Uri contentUri);
+        void onNoneItemInList();
+        void onFirstLoadingFinished();
     }
 }
 

@@ -6,6 +6,8 @@
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
     android:id="@+id/grid_item_rank_imageview"
+    android:scaleType="fitXY"
     android:adjustViewBounds="true"
-    android:scaleType="centerCrop"
+
     />
+    <!--android:adjustViewBounds="true"-->
