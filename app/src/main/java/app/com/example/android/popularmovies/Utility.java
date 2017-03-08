@@ -64,4 +64,9 @@ public class Utility {
         return prefs.getString(context.getString(R.string.pref_mode_key),
                 context.getString(R.string.pref_mode_popular));
     }
+
+    public static String getPreferredSyncInterval(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString(context.getString(R.string.pref_sync_interval_key), context.getString(R.string.pref_sync_interval_default));
+    }
 }

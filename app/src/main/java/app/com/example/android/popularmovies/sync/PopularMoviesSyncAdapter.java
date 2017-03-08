@@ -50,8 +50,8 @@ import static app.com.example.android.popularmovies.Utility.getImageFromUrl;
 public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
     public final String LOG_TAG = PopularMoviesSyncAdapter.class.getSimpleName();
     // Interval at which to sync with the weather, in seconds.
-    public static final int SYNC_INTERVAL = 60*60*3;  // 3 hours
-    public static final int SYNC_FLEXTIME = SYNC_INTERVAL/3;
+    public static int SYNC_INTERVAL = 60*60*3;  // 3 hours
+    public static int SYNC_FLEXTIME = SYNC_INTERVAL/3;
 
     private static final long DAY_IN_MILLIS = 1000 * 60 * 60 * 24;
     private static final int POPULAR_NOTIFICATION_ID = 3004;
@@ -607,6 +607,13 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
 
     public static void initializeSyncAdapter(Context context) {
         getSyncAccount(context);
+    }
+
+    public static void changeSyncInterval(Context context, String syncInterval) {
+        SYNC_INTERVAL = Integer.parseInt(syncInterval) * 60 * 60;
+        SYNC_FLEXTIME = SYNC_INTERVAL / 3;
+        PopularMoviesSyncAdapter.configurePeriodicSync(context, SYNC_INTERVAL, SYNC_FLEXTIME);
+        Log.d("changeSyncInterval","syncinterval is " + SYNC_INTERVAL);
     }
 
     private void notifyMovie(boolean isFirstItemChanged,String mode,boolean isNotifyIfNotChanged) {
