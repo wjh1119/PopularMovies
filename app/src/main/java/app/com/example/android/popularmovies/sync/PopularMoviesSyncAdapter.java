@@ -670,7 +670,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                     // notifications.  Just throw in some data.
                     NotificationCompat.Builder mBuilder =
                             new NotificationCompat.Builder(getContext())
-                                    .setSmallIcon(R.mipmap.ic_launcher)
+                                    .setSmallIcon(R.drawable.ic_launcher)
                                     .setContentTitle(title)
                                     .setContentText(contentText);
 
