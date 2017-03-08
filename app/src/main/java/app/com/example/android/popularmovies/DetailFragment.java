@@ -205,7 +205,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         //ButterKnife连接
         ButterKnife.bind(DetailFragment.this, mView);
 
-        FetchDetailTask fetchDetailTask = new FetchDetailTask(getContext());
+        FetchDetailTask fetchDetailTask = new FetchDetailTask();
         fetchDetailTask.setOnDataFinishedListener(new FetchDetailTask.OnDataFinishedListener(){
             @Override
             public void onDataSuccessfully(Object data) {
