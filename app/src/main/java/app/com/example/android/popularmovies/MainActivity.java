@@ -28,6 +28,7 @@ public class MainActivity extends ActionBarActivity
     private boolean mTwoPane;
 
     private String mMode;
+    private String mSyncInterval;
 
     private boolean mIsShowCollection = false;
 
@@ -36,6 +37,7 @@ public class MainActivity extends ActionBarActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         mMode = Utility.getPreferredMode(this);
+        mSyncInterval = Utility.getPreferredSyncInterval(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -124,6 +126,7 @@ public class MainActivity extends ActionBarActivity
     protected void onResume() {
         super.onResume();
         String mode = Utility.getPreferredMode( this );
+        String syncInterval = Utility.getPreferredSyncInterval(this);
         Log.d(LOG_TAG,"onResume");
         // update the mode in our second pane using the fragment manager
         if (mode != null && !mode.equals(mMode)) {
@@ -134,6 +137,11 @@ public class MainActivity extends ActionBarActivity
             showHintInDetailContainerOrToast("电影列表更改排序方式");
 
             mMode = mode;
+        }
+
+        if (syncInterval != null && !syncInterval.equals(mSyncInterval)) {
+            mSyncInterval= syncInterval;
+            PopularMoviesSyncAdapter.changeSyncInterval(this,mSyncInterval);
         }
     }
 
