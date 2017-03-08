@@ -1,4 +1,4 @@
-package app.com.example.android.popularmovies;
+package app.com.example.android.popularmovies.AsyncTask;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -8,6 +8,8 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 
 import java.util.HashMap;
+
+import app.com.example.android.popularmovies.DetailFragment;
 
 import static app.com.example.android.popularmovies.DetailFragment.COL_OVERVIEW;
 import static app.com.example.android.popularmovies.DetailFragment.COL_RELEASE_DATE;

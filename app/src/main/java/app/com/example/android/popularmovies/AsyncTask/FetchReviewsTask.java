@@ -1,4 +1,4 @@
-package app.com.example.android.popularmovies;
+package app.com.example.android.popularmovies.AsyncTask;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -9,6 +9,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import app.com.example.android.popularmovies.R;
 
 import static app.com.example.android.popularmovies.DetailFragment.COL_REVIEWS;
 

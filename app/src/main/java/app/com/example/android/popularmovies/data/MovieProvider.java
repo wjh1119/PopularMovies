@@ -33,34 +33,39 @@ public class MovieProvider extends ContentProvider {
         sRankByModeQueryBuilder.setTables(MovieContract.MovieEntry.TABLE_NAME);
     }
 
-    //location.location_setting = ?
+    //popularRank = ?
     private static final String sPopularAndRankSelection =
             MovieContract.MovieEntry.TABLE_NAME+
                     "." + MovieContract.MovieEntry.COLUMN_POPULAR_RANK + " = ? ";
 
-    //location.location_setting = ?
+    //topratedRank = ?
     private static final String sTopratedAndRankSelection =
             MovieContract.MovieEntry.TABLE_NAME+
                     "." + MovieContract.MovieEntry.COLUMN_TOPRATED_RANK + " = ? ";
 
+    //popularRank > ? AND collect = ?
     private static final String sPopularAndCollectSelection =
             MovieContract.MovieEntry.TABLE_NAME+
                     "." + MovieContract.MovieEntry.COLUMN_POPULAR_RANK + " > ? AND "
                     + MovieContract.MovieEntry.COLUMN_COLLECT+ " = ? ";
 
+    //topratedRank > ? AND collect = ?
     private static final String sTopratedAndCollectSelection =
             MovieContract.MovieEntry.TABLE_NAME+
                     "." + MovieContract.MovieEntry.COLUMN_TOPRATED_RANK + " > ? AND "
                     + MovieContract.MovieEntry.COLUMN_COLLECT+ " = ? ";
 
+    //popularRank > 0 ,
     private static final String sPopularSelection =
             MovieContract.MovieEntry.TABLE_NAME+
                     "." + MovieContract.MovieEntry.COLUMN_POPULAR_RANK + " > ? ";
 
+    //topratedRank > 0
     private static final String sTopratedSelection =
             MovieContract.MovieEntry.TABLE_NAME+
                     "." + MovieContract.MovieEntry.COLUMN_TOPRATED_RANK + " > ? ";
 
+    //获取某排名模式下的排名
     private Cursor getRankByMode(Uri uri, String[] projection, String sortOrder) {
         String mode = MovieContract.MovieEntry.getModeFromUri(uri);
 
@@ -85,6 +90,7 @@ public class MovieProvider extends ContentProvider {
         );
     }
 
+    //通过排名模式及排名获取电影信息
     private Cursor getMovieByModeAndRank(
             Uri uri, String[] projection, String sortOrder) {
         String mode = MovieContract.MovieEntry.getModeFromUri(uri);
@@ -112,6 +118,7 @@ public class MovieProvider extends ContentProvider {
         );
     }
 
+    //获取某排名模式下被收藏的电影
     private Cursor getMovieByModeAndCollect(
             Uri uri, String[] projection, String sortOrder) {
         String mode = MovieContract.MovieEntry.getModeFromUri(uri);
@@ -138,12 +145,6 @@ public class MovieProvider extends ContentProvider {
         );
     }
 
-    /*
-        Students: Here is where you need to create the UriMatcher. This UriMatcher will
-        match each URI to the WEATHER, WEATHER_WITH_LOCATION, WEATHER_WITH_LOCATION_AND_DATE,
-        and LOCATION integer constants defined above.  You can test this by uncommenting the
-        testUriMatcher test within TestUriMatcher.
-     */
     public static UriMatcher buildUriMatcher() {
         // I know what you're thinking.  Why create a UriMatcher when you can use regular
         // expressions instead?  Because you're not crazy, that's why.
@@ -163,10 +164,6 @@ public class MovieProvider extends ContentProvider {
         return matcher;
     }
 
-    /*
-        Students: We've coded this for you.  We just create a new WeatherDbHelper for later use
-        here.
-     */
     @Override
     public boolean onCreate() {
         mOpenHelper = new MovieDbHelper(getContext());

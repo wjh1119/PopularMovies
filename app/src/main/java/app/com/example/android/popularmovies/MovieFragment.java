@@ -104,10 +104,10 @@ public class MovieFragment extends Fragment {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_refresh) {
-            updateMovie();
-            return true;
-        }
+//        if (id == R.id.action_refresh) {
+//            updateMovie();
+//            return true;
+//        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -177,18 +177,6 @@ public class MovieFragment extends Fragment {
                 Log.d("onCreateView","mIsShowCollection is " + mIsShowCollection);
             }
         }
-
-//        mGridView.post(new Runnable(){
-//            public void run(){
-//                if (mMovieAdapter.getCursor() == null ){
-//                    ((Callback) getActivity()).onNoneItemInList();
-//                    Log.d(LOG_TAG,"cursor is null");
-//                }else if (!mMovieAdapter.getCursor().moveToFirst()){
-//                    ((Callback) getActivity()).onNoneItemInList();
-//                    Log.d(LOG_TAG,"cursor can't moveToFirst");
-//                }
-//            }
-//        });
         return rootView;
     }
 

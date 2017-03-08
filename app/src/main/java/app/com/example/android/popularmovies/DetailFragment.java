@@ -1,6 +1,5 @@
 package app.com.example.android.popularmovies;
 
-import android.content.ContentValues;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
@@ -23,6 +22,10 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import app.com.example.android.popularmovies.AsyncTask.FetchDetailTask;
+import app.com.example.android.popularmovies.AsyncTask.FetchReviewsTask;
+import app.com.example.android.popularmovies.AsyncTask.FetchVideosTask;
+import app.com.example.android.popularmovies.AsyncTask.UpdateCollectTask;
 import app.com.example.android.popularmovies.data.MovieContract;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -69,9 +72,8 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             // In this case the id needs to be fully qualified with a table name, since
             // the content provider joins the location & weather tables in the background
             // (both have an _id column)
-            // On the one hand, that's annoying.  On the other, you can search the weather table
-            // using the location set by the user, which is only in the Location table.
-            // So the convenience is worth it.
+            // On the one hand, that's annoying.  On the other, you can search the movie table
+            // using the mode set by the user.
 
             MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry._ID,
             MovieContract.MovieEntry.COLUMN_POSTER_IMAGE,
@@ -82,29 +84,25 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE,
             MovieContract.MovieEntry.COLUMN_COLLECT,
             MovieContract.MovieEntry.COLUMN_RUNTIME,
-
-            //排名
             MovieContract.MovieEntry.COLUMN_REVIEWS,
             MovieContract.MovieEntry.COLUMN_VIDEOS,
     };
 
-    static final int _ID = 0;
-    static final int COL_POSTER_IMAGE = 1;
-    static final int COL_OVERVIEW = 2;
-    static final int COL_RELEASE_DATE = 3;
-    static final int COL_ID = 4;
-    static final int COL_TITLE= 5;
-    static final int COL_VOTE_AVERAGE = 6;
+    public static final int _ID = 0;
+    public static final int COL_POSTER_IMAGE = 1;
+    public static final int COL_OVERVIEW = 2;
+    public static final int COL_RELEASE_DATE = 3;
+    public static final int COL_ID = 4;
+    public static final int COL_TITLE= 5;
+    public static final int COL_VOTE_AVERAGE = 6;
 
-    //weather the movie is collected
-    static final int COL_COLLECT = 7;
+    //whather the movie is collected
+    public static final int COL_COLLECT = 7;
 
     //movie's runtime
-    static final int COL_RUNTIME = 8;
-
-    //
-    static final int COL_REVIEWS = 9;
-    static final int COL_VIDEOS = 10;
+    public static final int COL_RUNTIME = 8;
+    public static final int COL_REVIEWS = 9;
+    public static final int COL_VIDEOS = 10;
 
     public DetailFragment() {
         setHasOptionsMenu(true);
@@ -161,37 +159,24 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             Log.v(LOG_TAG,"click");
             if(mIsCollect.equals("false")){//“收藏”
                 Toast.makeText(getContext(),"收藏成功", Toast.LENGTH_LONG).show();
-                //item.setTitle(getString(R.string.action_collect_cancel));//“取消收藏”
                 item.setIcon(R.drawable.ic_favorite_white_24dp);
-                updateCollect("true");
+                //更新电影的collect值
+                UpdateCollectTask updateCollectTask = new UpdateCollectTask(getContext());
+                updateCollectTask.execute("true",mMovieId);
                 mIsCollect = "true";
             }else{
                 Toast.makeText(getContext(),"取消收藏", Toast.LENGTH_LONG).show();
-                //item.setTitle(getString(R.string.action_collect));//“收藏”
                 item.setIcon(R.drawable.ic_favorite_border_white_24dp);
-                updateCollect("false");
+                //更新电影的collect值
+                UpdateCollectTask updateCollectTask = new UpdateCollectTask(getContext());
+                updateCollectTask.execute("false",mMovieId);
                 mIsCollect = "false";
+                //告知MainActivity该电影取消收藏
                 ((Callback) getActivity()).onCancelCollection();
             }
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    private void updateCollect(String isCollect){
-
-        //更新数据库中影片是否收藏
-        if (mMovieId != null && isCollect != null) {
-            ContentValues values = new ContentValues();
-            values.put(MovieContract.MovieEntry.COLUMN_COLLECT, isCollect);
-            String selection = MovieContract.MovieEntry.TABLE_NAME+
-                    "." + MovieContract.MovieEntry.COLUMN_ID + " = ? ";
-            String[] selectionArgs = new String[]{mMovieId};
-            getContext().getContentResolver().update(MovieContract.MovieEntry.CONTENT_URI,values,selection,selectionArgs);
-            mIsCollect = isCollect;
-        }else{
-            Toast.makeText(getContext(),"数据正在加载，请稍后再试", Toast.LENGTH_LONG).show();
-        }
     }
 
     @Override

@@ -1,4 +1,4 @@
-package app.com.example.android.popularmovies;
+package app.com.example.android.popularmovies.AsyncTask;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -10,7 +10,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static app.com.example.android.popularmovies.DetailFragment.COL_VIDEOS;
+import app.com.example.android.popularmovies.DetailFragment;
+import app.com.example.android.popularmovies.R;
 
 /**
  * Created by Mr.King on 2017/2/22 0022.
@@ -43,7 +44,7 @@ public class FetchVideosTask extends AsyncTask<Cursor, Void, ArrayList<HashMap>>
 
         try {
 
-            String videosJsonStr = mData.getString(COL_VIDEOS);
+            String videosJsonStr = mData.getString(DetailFragment.COL_VIDEOS);
             final String OWM_LIST = "results";
 
             if (videosJsonStr != null) {

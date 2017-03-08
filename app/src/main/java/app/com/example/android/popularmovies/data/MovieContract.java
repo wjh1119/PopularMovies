@@ -58,15 +58,16 @@ public class MovieContract {
         public static final String COLUMN_VIDEO = "video";
         public static final String COLUMN_VOTE_AVERAGE = "vote_average";
 
-        //weather the movie is collected
+        //whether the movie is collected
         public static final String COLUMN_COLLECT = "collect";
 
         //movie's runtime
         public static final String COLUMN_RUNTIME = "runtime";
 
-        //
+        //movie's rank
         public static final String COLUMN_POPULAR_RANK = "popular_rank";
         public static final String COLUMN_TOPRATED_RANK = "toprated_rank";
+
         public static final String COLUMN_REVIEWS = "reviews";
         public static final String COLUMN_VIDEOS = "videos";
 

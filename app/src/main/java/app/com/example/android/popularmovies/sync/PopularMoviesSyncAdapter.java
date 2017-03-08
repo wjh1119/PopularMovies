@@ -50,7 +50,7 @@ import static app.com.example.android.popularmovies.Utility.getImageFromUrl;
 public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
     public final String LOG_TAG = PopularMoviesSyncAdapter.class.getSimpleName();
     // Interval at which to sync with the weather, in seconds.
-    public static final int SYNC_INTERVAL = 60*3;  // 3 hours
+    public static final int SYNC_INTERVAL = 60*60*3;  // 3 hours
     public static final int SYNC_FLEXTIME = SYNC_INTERVAL/3;
 
     private static final long DAY_IN_MILLIS = 1000 * 60 * 60 * 24;
@@ -68,8 +68,6 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
     // these indices must match the projection
     private static final int INDEX_ID = 0;
     private static final int INDEX_TITLE = 1;
-    private static final int INDEX_RELEASE_DATE = 2;
-    private static final int INDEX_VOTE_AVERAGE= 3;
 
     public PopularMoviesSyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
@@ -91,17 +89,14 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
             setMovieRankToZero();
             Log.d(LOG_TAG,"set rank of movies to 0");
             int idOfFirstRankForPopularAfter = getMovieDataFromJson(movieJsonStrForPopular,"popular");
-            Log.v(LOG_TAG,"getMovieData toprated from " + movieJsonStrForToprated);
             int idOfFirstRankForTopratedAfter = getMovieDataFromJson(movieJsonStrForToprated,"toprated");
-            Log.v(LOG_TAG,"getMovieData popular from " + movieJsonStrForPopular);
             boolean isPopularFirstItemChanged
                     = idOfFirstRankForPopularBefore != idOfFirstRankForPopularAfter;
-            Log.d(LOG_TAG," id of first rank for popular is " + idOfFirstRankForPopularBefore+idOfFirstRankForPopularAfter);
             boolean isTopratedFirstItemChanged
                     = idOfFirstRankForTopratedBefore != idOfFirstRankForTopratedAfter;
             //通知用户某一模式下的排名的变化，第三个参数为当无变化时是否通知用户。
-            notifyMovie(isPopularFirstItemChanged,"popular",true);
-            notifyMovie(isTopratedFirstItemChanged,"toprated",true);
+            notifyMovie(isPopularFirstItemChanged,"popular",false);
+            notifyMovie(isTopratedFirstItemChanged,"toprated",false);
         }catch (JSONException e) {
             Log.e(LOG_TAG, e.getMessage(), e);
             e.printStackTrace();
@@ -147,8 +142,9 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
             URL url = new URL(builtPopularUri.toString());
             Log.v(LOG_TAG,"url is " + url);
 
-            // Create the request to OpenWeatherMap, and open the connection
+            // Create the request to Movie, and open the connection
             urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setConnectTimeout(10000); //超时设置
             urlConnection.setRequestMethod("GET");
             urlConnection.connect();
 
@@ -221,8 +217,8 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                 JSONObject rankJson = new JSONObject(movieJsonStr);
                 JSONArray movieArray = rankJson.getJSONArray(OWM_LIST);
 
-//                int numberOfMovie = movieArray.length();
-                int numberOfMovie = 4;
+                int numberOfMovie = movieArray.length();
+//                int numberOfMovie = 4;
 
                 if (numberOfMovie == 1){
                     firstRankId = -1;
@@ -331,7 +327,6 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                         movieValues.put(MovieContract.MovieEntry.COLUMN_TOPRATED_RANK, topratedRank);
                         movieValues.put(MovieContract.MovieEntry.COLUMN_REVIEWS, reviews);
                         movieValues.put(MovieContract.MovieEntry.COLUMN_VIDEOS, videos);
-                        getContext().getContentResolver().insert(MovieContract.MovieEntry.CONTENT_URI,movieValues);
                         Log.v(LOG_TAG,"insert movieValues: " + movieValues);
 
                         cVVector.add(movieValues);
@@ -351,18 +346,17 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                                 rankValue, idSelection, idSelectionArgs);
                         Log.d(LOG_TAG,"movie is already in database,app only updates its rank");
                     }
-
-                    int inserted = 0;
-                    // add to database
-                    if ( cVVector.size() > 0 ) {
-                        ContentValues[] cvArray = new ContentValues[cVVector.size()];
-                        cVVector.toArray(cvArray);
-                        inserted = getContext().getContentResolver().bulkInsert(MovieContract.MovieEntry.CONTENT_URI, cvArray);
-                    }
-
-                    Log.d(LOG_TAG, "FetchWeatherTask Complete. " + inserted + " Inserted");
                     getCursorById.close();
                 }
+                int inserted = 0;
+                // add to database
+                if ( cVVector.size() > 0 ) {
+                    ContentValues[] cvArray = new ContentValues[cVVector.size()];
+                    cVVector.toArray(cvArray);
+                    inserted = getContext().getContentResolver().bulkInsert(MovieContract.MovieEntry.CONTENT_URI, cvArray);
+                }
+
+                Log.d(LOG_TAG, "FetchWeatherTask Complete. " + inserted + " Inserted");
                 db.close();
                 Log.d(LOG_TAG,"fetch data from internet");
             }else{
@@ -417,6 +411,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
             // Create the request to OpenWeatherMap, and open the connection
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod("GET");
+            urlConnection.setConnectTimeout(10000);
             urlConnection.connect();
 
             Log.v(LOG_TAG,"url connected");
@@ -628,7 +623,9 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
         Boolean.parseBoolean(context.getString(R.string.pref_enable_notifications_default)));
 
         if ( displayNotifications ) {
-            String lastNotificationKey = context.getString(R.string.pref_last_notification);
+            String lastNotificationKey = mode.equals("popular")?
+                    context.getString(R.string.pref_last_notification_popular):
+                    context.getString(R.string.pref_last_notification_toprated);
             long lastSync = prefs.getLong(lastNotificationKey, 0);
 
             if (System.currentTimeMillis() - lastSync >= DAY_IN_MILLIS) {
