@@ -33,8 +33,8 @@ public class MovieAdapter extends CursorAdapter {
     }
 
     /*
-        Remember that these views are reused as needed.
-     */
+                    Remember that these views are reused as needed.
+                 */
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
         View view = LayoutInflater.from(context).inflate(R.layout.grid_item_movies, parent, false);

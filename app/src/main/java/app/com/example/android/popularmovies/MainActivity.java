@@ -43,7 +43,7 @@ public class MainActivity extends ActionBarActivity
             // adding or replacing the detail fragment using a
             // fragment transaction.
             if (savedInstanceState == null) {
-                showHintInDetailContainerOrToast("请点击左侧电影海报查看电影详细信息");
+                showHintInDetailContainerOrToast("请点击电影海报查看电影详细信息");
             }
         } else {
             mTwoPane = false;
@@ -90,7 +90,7 @@ public class MainActivity extends ActionBarActivity
                 if ( null != mf ) {
                     mf.onIsShowCollectionChanged(mIsShowCollection);
                 }
-                showHintInDetailContainerOrToast("电影列表已刷新");
+                showHintInDetailContainerOrToast("电影列表已变更为我的收藏列表");
             }else{
                 item.setTitle(getString(R.string.action_showCollection));//“我的收藏列表”
                 mIsShowCollection = false;
@@ -98,7 +98,7 @@ public class MainActivity extends ActionBarActivity
                 if ( null != mf ) {
                     mf.onIsShowCollectionChanged(mIsShowCollection);
                 }
-                showHintInDetailContainerOrToast("电影列表已刷新");
+                showHintInDetailContainerOrToast("电影列表已变更为全部电影列表");
             }
             return true;
         }
@@ -121,34 +121,6 @@ public class MainActivity extends ActionBarActivity
 
             mMode = mode;
         }
-
-//        //获取intent
-//        Intent intent = getIntent();
-//
-//        if (intent != null && intent.getStringExtra(NOTIFICATION_MODE) != null) {
-//            Log.d(LOG_TAG,"intent" + intent.getStringExtra(NOTIFICATION_MODE));
-//            mMode = intent.getStringExtra(NOTIFICATION_MODE);
-//
-//            MovieFragment mf = (MovieFragment)getSupportFragmentManager().findFragmentById(R.id.main_container);
-//            if ( null != mf ) {
-//                mf.onModeChanged(mIsShowCollection);
-//            }
-//
-//            Bundle args = new Bundle();
-//            args.putParcelable(DetailFragment.DETAIL_URI, buildMovieWithModeAndRankUri(mMode,1));
-//
-//            DetailFragment fragment = new DetailFragment();
-//            fragment.setArguments(args);
-//
-//            getSupportFragmentManager().beginTransaction()
-//                    .replace(R.id.detail_container, fragment, DETAILFRAGMENT_TAG)
-//                    .commit();
-//
-//            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-//            prefs.edit().putString(getString(R.string.pref_mode_key),mMode);
-//            intent = null;
-//        }
-
     }
 
     private void showHintInDetailContainerOrToast(String hint){
@@ -163,7 +135,7 @@ public class MainActivity extends ActionBarActivity
                     .replace(R.id.detail_container, fragment, HINTFRAGMENT_TAG)
                     .commit();
         }else{
-            Toast.makeText(this,hint,Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,hint,Toast.LENGTH_LONG).show();
         }
     }
 
@@ -194,7 +166,19 @@ public class MainActivity extends ActionBarActivity
     @Override
     public void onCancelCollection() {
         if(mTwoPane && mIsShowCollection){
-            showHintInDetailContainerOrToast("该电影不在收藏列表，请在左侧重新选择");
+            showHintInDetailContainerOrToast("该电影不在收藏列表，请重新选择");
         }
+    }
+
+    @Override
+    public void onNoneItemInList() {
+        if (!mIsShowCollection){
+            //showHintInDetailContainerOrToast("电影列表暂无数据，数据正在加载中，请稍等");
+        }
+    }
+
+    @Override
+    public void onFirstLoadingFinished() {
+        //showHintInDetailContainerOrToast("数据加载完毕，请点击海报查看电影详细信息");
     }
 }

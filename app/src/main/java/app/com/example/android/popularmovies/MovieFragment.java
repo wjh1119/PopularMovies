@@ -31,7 +31,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
-import android.widget.Toast;
 
 import app.com.example.android.popularmovies.data.MovieContract;
 import app.com.example.android.popularmovies.sync.PopularMoviesSyncAdapter;
@@ -47,6 +46,7 @@ public class MovieFragment extends Fragment {
     private static final int MOVIE_LOADER = 0;
     private static final int COLLECTION_LOADER = 1;
     private boolean mIsShowCollection = false;
+    private boolean mIsFirstLoading = false;
 
     private GridView mGridView;
     private int mPosition = GridView.INVALID_POSITION;
@@ -177,6 +177,18 @@ public class MovieFragment extends Fragment {
                 Log.d("onCreateView","mIsShowCollection is " + mIsShowCollection);
             }
         }
+
+//        mGridView.post(new Runnable(){
+//            public void run(){
+//                if (mMovieAdapter.getCursor() == null ){
+//                    ((Callback) getActivity()).onNoneItemInList();
+//                    Log.d(LOG_TAG,"cursor is null");
+//                }else if (!mMovieAdapter.getCursor().moveToFirst()){
+//                    ((Callback) getActivity()).onNoneItemInList();
+//                    Log.d(LOG_TAG,"cursor can't moveToFirst");
+//                }
+//            }
+//        });
         return rootView;
     }
 
@@ -191,6 +203,11 @@ public class MovieFragment extends Fragment {
             getLoaderManager().initLoader(MOVIE_LOADER, null, new MoviesLoaderCallbacks());
         }
         super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
     }
 
     private void updateMovie() {
@@ -262,14 +279,21 @@ public class MovieFragment extends Fragment {
         @Override
         public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
             mMovieAdapter.swapCursor(cursor);
-            if (!cursor.moveToFirst()){
-                Toast.makeText(getActivity(), "初次加载，请稍后", Toast.LENGTH_SHORT).show();
-            }
             Log.v("onLoadFinished", cursor.toString());
             if (mPosition != GridView.INVALID_POSITION) {
                 // If we don't need to restart the loader, and there's a desired position to restore
                 // to, do so now.
                 mGridView.smoothScrollToPosition(mPosition);
+            }
+            if (!cursor.moveToFirst()){
+                ((Callback) getActivity()).onNoneItemInList();
+                Log.d(LOG_TAG,"onNoneItemInList");
+                mIsFirstLoading = true;
+            }
+            if(cursor.moveToFirst() && mIsFirstLoading){
+                ((Callback) getActivity()).onFirstLoadingFinished();
+                Log.d(LOG_TAG,"onFirstLoadingFinished");
+                mIsFirstLoading = false;
             }
         }
 
@@ -324,6 +348,8 @@ public class MovieFragment extends Fragment {
 
     public interface Callback {
         void onItemSelected(Uri contentUri);
+        void onNoneItemInList();
+        void onFirstLoadingFinished();
     }
 }
 

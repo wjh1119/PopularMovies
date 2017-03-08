@@ -16,8 +16,21 @@ public class MovieDbHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "movie.db";
 
+    private static MovieDbHelper instance;
+
     public MovieDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    /**
+     * 为应用程序提供一个单一的入口，保证应用程序使用同一个对象操作数据库，不会因为对象不同而使同步方法失效
+     * @param context 上下文
+     * @return  instance
+     */
+    public static MovieDbHelper getDbHelper(Context context){
+        if(instance==null)
+            instance=new MovieDbHelper(context);
+        return instance;
     }
 
     @Override

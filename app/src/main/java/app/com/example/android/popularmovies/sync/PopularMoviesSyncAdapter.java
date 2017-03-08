@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Vector;
 
 import app.com.example.android.popularmovies.BuildConfig;
 import app.com.example.android.popularmovies.MainActivity;
@@ -49,7 +50,7 @@ import static app.com.example.android.popularmovies.Utility.getImageFromUrl;
 public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
     public final String LOG_TAG = PopularMoviesSyncAdapter.class.getSimpleName();
     // Interval at which to sync with the weather, in seconds.
-    public static final int SYNC_INTERVAL = 60 * 60 * 3;  // 3 hours
+    public static final int SYNC_INTERVAL = 60*3;  // 3 hours
     public static final int SYNC_FLEXTIME = SYNC_INTERVAL/3;
 
     private static final long DAY_IN_MILLIS = 1000 * 60 * 60 * 24;
@@ -86,6 +87,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
         try{
             int idOfFirstRankForPopularBefore = getFirstRankIdByMode("popular");
             int idOfFirstRankForTopratedBefore = getFirstRankIdByMode("toprated");
+            
             setMovieRankToZero();
             Log.d(LOG_TAG,"set rank of movies to 0");
             int idOfFirstRankForPopularAfter = getMovieDataFromJson(movieJsonStrForPopular,"popular");
@@ -226,9 +228,11 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                     firstRankId = -1;
                 }
 
-                MovieDbHelper dbHelper = new MovieDbHelper(getContext());
+                MovieDbHelper dbHelper = MovieDbHelper.getDbHelper(getContext());
                 SQLiteDatabase db = dbHelper.getWritableDatabase();
+
                 // Insert the new movie information into the database
+                Vector<ContentValues> cVVector = new Vector<ContentValues>(movieArray.length());
                 for(int i = 0; i < numberOfMovie; i++) {
 
                     // 根据位置获取电影信息
@@ -330,7 +334,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                         getContext().getContentResolver().insert(MovieContract.MovieEntry.CONTENT_URI,movieValues);
                         Log.v(LOG_TAG,"insert movieValues: " + movieValues);
 
-                        getCursorById.close();
+                        cVVector.add(movieValues);
                     }else {
 
                         //更新对应排序模式的排名
@@ -347,6 +351,17 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                                 rankValue, idSelection, idSelectionArgs);
                         Log.d(LOG_TAG,"movie is already in database,app only updates its rank");
                     }
+
+                    int inserted = 0;
+                    // add to database
+                    if ( cVVector.size() > 0 ) {
+                        ContentValues[] cvArray = new ContentValues[cVVector.size()];
+                        cVVector.toArray(cvArray);
+                        inserted = getContext().getContentResolver().bulkInsert(MovieContract.MovieEntry.CONTENT_URI, cvArray);
+                    }
+
+                    Log.d(LOG_TAG, "FetchWeatherTask Complete. " + inserted + " Inserted");
+                    getCursorById.close();
                 }
                 db.close();
                 Log.d(LOG_TAG,"fetch data from internet");
@@ -447,7 +462,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
 
     //将排名归零，即无排名
     private void setMovieRankToZero(){
-        MovieDbHelper dbHelper = new MovieDbHelper(getContext());
+        MovieDbHelper dbHelper = MovieDbHelper.getDbHelper(getContext());
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         Cursor cursor = db.query(
                 MovieContract.MovieEntry.TABLE_NAME,  // Table to Query
@@ -477,7 +492,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
 
     //查询某一模式下排名第一的电影的ID的排名,没有则返回-1
     private int getFirstRankIdByMode(String mode){
-        MovieDbHelper dbHelper = new MovieDbHelper(getContext());
+        MovieDbHelper dbHelper = MovieDbHelper.getDbHelper(getContext());
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         int idOfFirstRank = -1;
 
@@ -504,6 +519,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
         if(cursor!=null&&cursor.moveToFirst()) {
             idOfFirstRank = cursor.getInt(cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_ID));
         }
+        cursor.close();
         db.close();
         return idOfFirstRank;
     }
