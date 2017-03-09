@@ -107,7 +107,9 @@ public class MovieFragment extends Fragment {
 
         // Get a reference to the ListView, and attach this adapter to it.
         mGridView = (GridView) rootView.findViewById(R.id.grid_fragment);
+        View emptyView = rootView.findViewById(R.id.gridview_movie_empty);
         mGridView.setAdapter(mMovieAdapter);
+        mGridView.setEmptyView(emptyView);
 
         // We'll call our MainActivity
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
