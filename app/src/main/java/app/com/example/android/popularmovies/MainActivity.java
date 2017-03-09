@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -58,15 +57,15 @@ public class MainActivity extends ActionBarActivity
 
         //读取是否收藏
         if (savedInstanceState != null) {
-            Log.d(LOG_TAG, "savedInstanceState isn't null");
+            Logger.d(LOG_TAG, "savedInstanceState isn't null");
             if (savedInstanceState.containsKey(ISSHOWCOLLECTION_KEY)){
                 mIsShowCollection = savedInstanceState.getBoolean(ISSHOWCOLLECTION_KEY);
-                Log.d("onCreate","mIsShowCollection is " + mIsShowCollection);
+                Logger.d("onCreate","mIsShowCollection is " + mIsShowCollection);
             }
         }
 
         PopularMoviesSyncAdapter.initializeSyncAdapter(this);
-        Log.d(LOG_TAG,"initializeSyncAdapter");
+        Logger.d(LOG_TAG,"initializeSyncAdapter");
     }
 
     @Override
@@ -126,7 +125,7 @@ public class MainActivity extends ActionBarActivity
         super.onResume();
         String mode = Utility.getPreferredMode( this );
         String syncInterval = Utility.getPreferredSyncInterval(this);
-        Log.d(LOG_TAG,"onResume");
+        Logger.d(LOG_TAG,"onResume");
         // update the mode in our second pane using the fragment manager
         if (mode != null && !mode.equals(mMode)) {
             MovieFragment mf = (MovieFragment)getSupportFragmentManager().findFragmentById(R.id.main_container);
@@ -175,12 +174,12 @@ public class MainActivity extends ActionBarActivity
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.detail_container, fragment, DETAILFRAGMENT_TAG)
                     .commit();
-            Log.d("Click","mTwoPane is true ");
+            Logger.d("Click","mTwoPane is true ");
         } else {
             Intent intent = new Intent(this, DetailActivity.class)
                     .setData(contentUri);
             startActivity(intent);
-            Log.d("Click","mTwoPane is false ");
+            Logger.d("Click","mTwoPane is false ");
         }
     }
 

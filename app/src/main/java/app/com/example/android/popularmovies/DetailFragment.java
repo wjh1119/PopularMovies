@@ -8,7 +8,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -142,7 +141,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
                 mCollectMenuItem.setIcon(R.drawable.ic_favorite_border_white_24dp);
             }
         }else{
-            Log.d(LOG_TAG,"mIsCollect is null");
+            Logger.d(LOG_TAG,"mIsCollect is null");
         }
     }
 
@@ -155,7 +154,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         //实现收藏功能
         int id = item.getItemId();
         if (id == R.id.action_collect) {
-            Log.v(LOG_TAG,"click");
+            Logger.v(LOG_TAG,"click");
             if(mIsCollect.equals("false")){//“收藏”
                 ToastUtil.show(getContext(),"收藏成功");
                 item.setIcon(R.drawable.ic_favorite_white_24dp);
@@ -235,7 +234,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
                             mCollectMenuItem.setIcon(R.drawable.ic_favorite_border_white_24dp);
                         }
                     }else{
-                        Log.d(LOG_TAG,"mIsCollect is null");
+                        Logger.d(LOG_TAG,"mIsCollect is null");
                     }
 
                     //载入电影上映日期

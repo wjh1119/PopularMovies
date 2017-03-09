@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -41,10 +40,10 @@ public class Utility {
 
             Bitmap bitmap= BitmapFactory.decodeStream(inputStream);
             inputStream.close();
-            Log.v("getImageFromUrl","url is: " + imageUrl);
+            Logger.v("getImageFromUrl","url is: " + imageUrl);
             return bitmap;
         } catch (IOException e) {
-            Log.e(LOG_TAG, "Error ", e);
+            Logger.e(LOG_TAG, "Error ", e);
             return null;
         } finally {
             if (urlConnection != null) {

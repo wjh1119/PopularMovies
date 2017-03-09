@@ -3,7 +3,6 @@ package app.com.example.android.popularmovies;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -85,7 +84,7 @@ public class VideoAdapter extends BaseAdapter {
                     Uri youtubeUri = Uri.parse("http://www.youtube.com/watch?")
                             .buildUpon().appendQueryParameter("v",video.get("key").toString())
                             .build();
-                    Log.d("video",youtubeUri.toString());
+                    Logger.d("video",youtubeUri.toString());
                     Intent intent = new Intent(Intent.ACTION_VIEW, youtubeUri);
                     mContext.startActivity(intent);
                 }
