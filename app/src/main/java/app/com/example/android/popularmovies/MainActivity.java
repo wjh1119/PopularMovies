@@ -9,7 +9,6 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import app.com.example.android.popularmovies.sync.PopularMoviesSyncAdapter;
 
@@ -157,7 +156,7 @@ public class MainActivity extends ActionBarActivity
                     .replace(R.id.detail_container, fragment, HINTFRAGMENT_TAG)
                     .commit();
         }else{
-            Toast.makeText(this,hint,Toast.LENGTH_LONG).show();
+            ToastUtil.show(this,hint);
         }
     }
 

@@ -17,7 +17,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -158,14 +157,14 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         if (id == R.id.action_collect) {
             Log.v(LOG_TAG,"click");
             if(mIsCollect.equals("false")){//“收藏”
-                Toast.makeText(getContext(),"收藏成功", Toast.LENGTH_LONG).show();
+                ToastUtil.show(getContext(),"收藏成功");
                 item.setIcon(R.drawable.ic_favorite_white_24dp);
                 //更新电影的collect值
                 UpdateCollectTask updateCollectTask = new UpdateCollectTask(getContext());
                 updateCollectTask.execute("true",mMovieId);
                 mIsCollect = "true";
             }else{
-                Toast.makeText(getContext(),"取消收藏", Toast.LENGTH_LONG).show();
+                ToastUtil.show(getContext(),"取消收藏");
                 item.setIcon(R.drawable.ic_favorite_border_white_24dp);
                 //更新电影的collect值
                 UpdateCollectTask updateCollectTask = new UpdateCollectTask(getContext());
@@ -276,7 +275,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
 
             @Override
             public void onDataFailed() {
-                Toast.makeText(getContext(),"获取影片详细信息失败",Toast.LENGTH_SHORT).show();
+                ToastUtil.show(getContext(),"获取影片详细信息失败");
             }
         });
         fetchDetailTask.execute(mData);
@@ -291,7 +290,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
 
             @Override
             public void onDataFailed() {
-                Toast.makeText(getContext(),"获取评论数据失败",Toast.LENGTH_SHORT).show();
+                ToastUtil.show(getContext(),"获取评论数据失败");
             }
         });
         fetchReviewsTask.execute(mData);
@@ -306,7 +305,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
 
             @Override
             public void onDataFailed() {
-                Toast.makeText(getContext(),"获取预告片数据失败",Toast.LENGTH_SHORT).show();
+                ToastUtil.show(getContext(),"获取预告片数据失败");
             }
         });
         fetchVideosTask.execute(mData);

@@ -2,6 +2,7 @@ package app.com.example.android.popularmovies.sync;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.AbstractThreadedSyncAdapter;
@@ -23,7 +24,6 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,6 +41,7 @@ import app.com.example.android.popularmovies.BuildConfig;
 import app.com.example.android.popularmovies.MainActivity;
 import app.com.example.android.popularmovies.NetworkUtil;
 import app.com.example.android.popularmovies.R;
+import app.com.example.android.popularmovies.ToastUtil;
 import app.com.example.android.popularmovies.data.MovieContract;
 import app.com.example.android.popularmovies.data.MovieDbHelper;
 
@@ -77,7 +78,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
         Log.d(LOG_TAG,"onPerformSync");
         if (!NetworkUtil.getConnectivityStatus(getContext())){
-            Toast.makeText(getContext(),"无网络连接，无法获取网络数据", Toast.LENGTH_LONG).show();
+            ToastUtil.show(getContext(),"无网络连接，无法获取网络数据");
             return;
         }
         String movieJsonStrForPopular = getMovieJsonStr("popular");
@@ -670,7 +671,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                     // notifications.  Just throw in some data.
                     NotificationCompat.Builder mBuilder =
                             new NotificationCompat.Builder(getContext())
-                                    .setSmallIcon(R.drawable.ic_launcher)
+                                    .setSmallIcon(R.drawable.ic_movie_black_24dp)
                                     .setContentTitle(title)
                                     .setContentText(contentText);
 
@@ -694,7 +695,11 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                     NotificationManager mNotificationManager =
                             (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
                     // NOTIFICATION_ID allows you to update the notification later on.
-                    mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
+                    Notification notification = mBuilder.build();
+
+                    //点击时取消
+                    notification.flags |= Notification.FLAG_AUTO_CANCEL;
+                    mNotificationManager.notify(NOTIFICATION_ID, notification);
 
                     //refreshing last sync
                     SharedPreferences.Editor editor = prefs.edit();

@@ -20,6 +20,7 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
+import android.view.MenuItem;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings.
@@ -38,10 +39,29 @@ public class SettingsActivity extends PreferenceActivity
         // Add 'general' preferences, defined in the XML file
         addPreferencesFromResource(R.xml.pref_general);
 
+        //在`Actionbar`上显示一个返回上一级按钮
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+
         // For all preferences, attach an OnPreferenceChangeListener so the UI summary can be
         // updated when the preference changes.
         bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_mode_key)));
         bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_sync_interval_key)));
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        if (id == android.R.id.home){
+            //关闭当前的Activity即可
+            finish();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     /**
