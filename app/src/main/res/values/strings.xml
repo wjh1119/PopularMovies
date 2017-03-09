@@ -20,6 +20,9 @@
 
     <string name="pref_mode_toprated">toprated</string>
 
+    <!-- Key name for storing mode status in SharedPreferences -->
+    <string name="pref_movie_status_key" translatable="false">movie-status</string>
+
     //DetailActivity中的strings
     <string name="title_activity_detail">详情</string>
     <string name="hello_world">detail</string>

@@ -20,6 +20,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.IntDef;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
@@ -33,6 +34,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Vector;
@@ -68,6 +71,15 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
     // these indices must match the projection
     private static final int INDEX_ID = 0;
     private static final int INDEX_TITLE = 1;
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({MOVIE_STATUS_OK, MOVIE_STATUS_SERVER_DOWN, MOVIE_STATUS_SERVER_INVALID,  MOVIE_STATUS_UNKNOWN})
+    public @interface MovieStatus {}
+
+    public static final int MOVIE_STATUS_OK = 0;
+    public static final int MOVIE_STATUS_SERVER_DOWN = 1;
+    public static final int MOVIE_STATUS_SERVER_INVALID = 2;
+    public static final int MOVIE_STATUS_UNKNOWN = 3;
 
     public PopularMoviesSyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
@@ -165,6 +177,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
 
             if (buffer.length() == 0) {
                 // Stream was empty.  No point in parsing.
+                setMovieStatus(getContext(), MOVIE_STATUS_SERVER_DOWN);
                 return null;
             }
             movieJsonStr = buffer.toString();
@@ -174,6 +187,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
             Log.e(LOG_TAG, "Error ", e);
             // If the code didn't successfully get the weather data, there's no point in attemping
             // to parse it.
+            setMovieStatus(getContext(), MOVIE_STATUS_SERVER_DOWN);
             return null;
         } finally {
             if (urlConnection != null) {
@@ -227,7 +241,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                 SQLiteDatabase db = dbHelper.getWritableDatabase();
 
                 // Insert the new movie information into the database
-                Vector<ContentValues> cVVector = new Vector<ContentValues>(movieArray.length());
+                Vector<ContentValues> cVVector = new Vector<>(movieArray.length());
                 for(int i = 0; i < numberOfMovie; i++) {
 
                     // 根据位置获取电影信息
@@ -355,15 +369,16 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                     inserted = getContext().getContentResolver().bulkInsert(MovieContract.MovieEntry.CONTENT_URI, cvArray);
                 }
 
+                setMovieStatus(getContext(), MOVIE_STATUS_OK);
                 Log.d(LOG_TAG, "FetchWeatherTask Complete. " + inserted + " Inserted");
                 db.close();
-                Log.d(LOG_TAG,"fetch data from internet");
             }else{
                 Log.d(LOG_TAG,"fail to fetch data ,because Json is null");
             }
         } catch (JSONException e) {
             Log.e(LOG_TAG, e.getMessage(), e);
             e.printStackTrace();
+            setMovieStatus(getContext(), MOVIE_STATUS_SERVER_INVALID);
         }catch (NullPointerException e){
             Log.e(LOG_TAG,e.getMessage(), e);
         }
@@ -430,6 +445,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
 
             if (buffer.length() == 0) {
                 // Stream was empty.  No point in parsing.
+                setMovieStatus(getContext(), MOVIE_STATUS_SERVER_DOWN);
                 return null;
             }
             movieJsonStr = buffer.toString();
@@ -439,6 +455,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
             Log.e(LOG_TAG, "Error ", e);
             // If the code didn't successfully get the weather data, there's no point in attemping
             // to parse it.
+            setMovieStatus(getContext(), MOVIE_STATUS_SERVER_DOWN);
             return null;
         } finally {
             if (urlConnection != null) {
@@ -643,10 +660,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                 Cursor cursor = context.getContentResolver().query(movieUri, NOTIFY_MOVIE_PROJECTION, null, null, null);
 
                 if (cursor.moveToFirst()) {
-//                        int movieId = cursor.getInt(INDEX_ID);
                     String movieTitle = cursor.getString(INDEX_TITLE);
-//                        String releaseDate = cursor.getString(INDEX_RELEASE_DATE);
-//                        String voteAverage = cursor.getString(INDEX_VOTE_AVERAGE);
 
                     String contentText;
 
@@ -704,5 +718,18 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                 cursor.close();
             }
         }
+    }
+
+    /**
+     * Sets the location status into shared preference.  This function should not be called from
+     * the UI thread because it uses commit to write to the shared preferences.
+     * @param c Context to get the PreferenceManager from.
+     * @param locationStatus The IntDef value to set
+     */
+    static private void setMovieStatus(Context c, @MovieStatus int locationStatus){
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(c);
+        SharedPreferences.Editor spe = sp.edit();
+        spe.putInt(c.getString(R.string.pref_movie_status_key), locationStatus);
+        spe.commit();
     }
 }
