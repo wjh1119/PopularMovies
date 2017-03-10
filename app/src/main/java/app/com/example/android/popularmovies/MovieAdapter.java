@@ -12,6 +12,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
+
+import static app.com.example.android.popularmovies.MovieFragment.COL_TITLE;
 
 /**
  * {@link MovieAdapter} exposes a list of weather forecasts
@@ -55,8 +58,11 @@ public class MovieAdapter extends CursorAdapter {
                 .getDefaultDisplay()
                 .getMetrics(displayMetrics);
 
-        ImageView imageView = (ImageView) view;
-
+        ImageView imageView = (ImageView) view.findViewById(R.id.grid_item_imageview);
         imageView.setImageDrawable(convertCursorRowToPosterImage(cursor));
+
+        TextView titleTextView = (TextView) view.findViewById(R.id.grid_item_title_textview);
+        titleTextView.setText(cursor.getString(COL_TITLE));
+
     }
 }

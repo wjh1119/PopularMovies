@@ -67,6 +67,7 @@ public class MovieFragment extends Fragment {
             MovieContract.MovieEntry.COLUMN_TITLE,
             MovieContract.MovieEntry.COLUMN_POPULAR_RANK,
             MovieContract.MovieEntry.COLUMN_TOPRATED_RANK,
+            MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE,
     };
 
     // These indices are tied to MOVIE_COLUMNS.  If MOVIE_COLUMNS changes, these
@@ -77,6 +78,7 @@ public class MovieFragment extends Fragment {
     static final int COL_TITLE= 3;
     static final int COL_POPULAR_RANK = 4;
     static final int COL_TOPRATED_RANK = 5;
+    static final int COL_VOTE_AVERAGE = 6;
 
     private MovieAdapter mMovieAdapter;
 
