@@ -14,7 +14,7 @@ public final class Logger {
 
     //控制是否显示LOG，你可以在Logger里面配置，也可以像API_KEY那样，在gradle里面配置
     //建议在gradle里面配置，方便管理等。这里我为了能完整演示而使用了一个常量来控制
-    private static final boolean showLog = BuildConfig.SHOW_LOG;
+    private static final boolean showLog = true;
 
     public static void v(final String tag, final String msg) {
         if (showLog) Log.v(tag, msg);
