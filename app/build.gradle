@@ -9,7 +9,7 @@ android {
     dataBinding.enabled = true
     defaultConfig {
         applicationId "app.com.example.android.popularmovies"
-        minSdkVersion 10
+        minSdkVersion 11
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"

@@ -22,7 +22,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -68,6 +67,7 @@ public class MovieFragment extends Fragment {
             MovieContract.MovieEntry.COLUMN_TITLE,
             MovieContract.MovieEntry.COLUMN_POPULAR_RANK,
             MovieContract.MovieEntry.COLUMN_TOPRATED_RANK,
+            MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE,
     };
 
     // These indices are tied to MOVIE_COLUMNS.  If MOVIE_COLUMNS changes, these
@@ -78,6 +78,7 @@ public class MovieFragment extends Fragment {
     static final int COL_TITLE= 3;
     static final int COL_POPULAR_RANK = 4;
     static final int COL_TOPRATED_RANK = 5;
+    static final int COL_VOTE_AVERAGE = 6;
 
     private MovieAdapter mMovieAdapter;
 
@@ -107,7 +108,9 @@ public class MovieFragment extends Fragment {
 
         // Get a reference to the ListView, and attach this adapter to it.
         mGridView = (GridView) rootView.findViewById(R.id.grid_fragment);
+        View emptyView = rootView.findViewById(R.id.gridview_movie_empty);
         mGridView.setAdapter(mMovieAdapter);
+        mGridView.setEmptyView(emptyView);
 
         // We'll call our MainActivity
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -119,24 +122,24 @@ public class MovieFragment extends Fragment {
                 Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
                 if (cursor != null) {
                     String mode = Utility.getPreferredMode(getActivity());
-                    Log.v("intent","cursor" +" popular rank: " + cursor.getInt(COL_POPULAR_RANK) +
+                    Logger.v("intent","cursor" +" popular rank: " + cursor.getInt(COL_POPULAR_RANK) +
                             ", toprated rank: "+ cursor.getInt(COL_TOPRATED_RANK));
                     if (mode.equals("popular")){
                         ((Callback) getActivity())
                                 .onItemSelected(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
                                         mode, cursor.getInt(COL_POPULAR_RANK)
                                 ));
-                        Log.v("intent","sent intent with mode: "+ mode +" and rank: "
+                        Logger.v("intent","sent intent with mode: "+ mode +" and rank: "
                                 + cursor.getInt(COL_POPULAR_RANK));
                     }else if (mode.equals("toprated")){
                         ((Callback) getActivity())
                                 .onItemSelected(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
                                         mode, cursor.getInt(COL_TOPRATED_RANK)
                                 ));
-                        Log.v("intent","sent intent with mode: "+ mode +" and rank: "
+                        Logger.v("intent","sent intent with mode: "+ mode +" and rank: "
                                 + cursor.getInt(COL_TOPRATED_RANK));
                     }else{
-                        Log.e("intent","mode is wrong");
+                        Logger.d("intent","mode is wrong");
                     }
                 }
             }
@@ -149,7 +152,7 @@ public class MovieFragment extends Fragment {
         // or magically appeared to take advantage of room, but data or place in the app was never
         // actually *lost*.
         if (savedInstanceState != null) {
-            Log.d(LOG_TAG, "savedInstanceState isn't null");
+            Logger.d(LOG_TAG, "savedInstanceState isn't null");
             if (savedInstanceState.containsKey(SELECTED_KEY)){
                 // The gridview probably hasn't even been populated yet.  Actually perform the
                 // swapout in onLoadFinished.
@@ -157,7 +160,7 @@ public class MovieFragment extends Fragment {
             }
             if (savedInstanceState.containsKey(ISSHOWCOLLECTION_KEY)){
                 mIsShowCollection = savedInstanceState.getBoolean(ISSHOWCOLLECTION_KEY);
-                Log.d("onCreateView","mIsShowCollection is " + mIsShowCollection);
+                Logger.d("onCreateView","mIsShowCollection is " + mIsShowCollection);
             }
         }
         return rootView;
@@ -165,7 +168,7 @@ public class MovieFragment extends Fragment {
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        Log.d("onActivityCreated","mIsShowCollection is " + mIsShowCollection);
+        Logger.d("onActivityCreated","mIsShowCollection is " + mIsShowCollection);
         if (mIsShowCollection){
             getLoaderManager().destroyLoader(MOVIE_LOADER);
             getLoaderManager().initLoader(COLLECTION_LOADER, null, new CollectionLoaderCallbacks());
@@ -200,7 +203,7 @@ public class MovieFragment extends Fragment {
         }
         mIsShowCollection = isShowCollection;
 
-        Log.d("onIsShowCoChanged","isShowcollection is " + isShowCollection);
+        Logger.d("onIsShowCoChanged","isShowcollection is " + isShowCollection);
     }
 
     @Override
@@ -219,7 +222,7 @@ public class MovieFragment extends Fragment {
         @Override
         public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
             String mode = Utility.getPreferredMode(getActivity());
-            Log.d(LOG_TAG,"onCreateLoader mode is " + mode);
+            Logger.d(LOG_TAG,"onCreateLoader mode is " + mode);
 
             String sortOrder = MovieContract.MovieEntry.COLUMN_ID + " ASC";
             if (mode.equals("popular")){
@@ -227,12 +230,12 @@ public class MovieFragment extends Fragment {
             }else if (mode.equals("toprated")) {
                 sortOrder = MovieContract.MovieEntry.COLUMN_TOPRATED_RANK + " ASC";
             }else{
-                Log.e("mode","error");
+                Logger.d("mode","error");
             }
 
             Uri movieForModeUri = MovieContract.MovieEntry.buildMovieWithModeUri(
                     mode);
-            Log.v("onCreateLoader","create movieForModeUri: " + movieForModeUri.toString());
+            Logger.v("onCreateLoader","create movieForModeUri: " + movieForModeUri.toString());
 
             CursorLoader cursorLoader = new CursorLoader(getActivity(),
                     movieForModeUri,
@@ -255,12 +258,12 @@ public class MovieFragment extends Fragment {
             //第一次加载数据库里没有数据，给予用户提示
             if (!cursor.moveToFirst()){
                 ((Callback) getActivity()).onNoneItemInList();
-                Log.d(LOG_TAG,"onNoneItemInList");
+                Logger.d(LOG_TAG,"onNoneItemInList");
                 mIsFirstLoading = true;
             }
             if(cursor.moveToFirst() && mIsFirstLoading){
                 ((Callback) getActivity()).onFirstLoadingFinished();
-                Log.d(LOG_TAG,"onFirstLoadingFinished");
+                Logger.d(LOG_TAG,"onFirstLoadingFinished");
                 mIsFirstLoading = false;
             }
         }
@@ -281,12 +284,12 @@ public class MovieFragment extends Fragment {
             }else if (mode.equals("toprated")) {
                 sortOrder = MovieContract.MovieEntry.COLUMN_TOPRATED_RANK + " ASC";
             }else{
-                Log.e("mode","error");
+                Logger.d("mode","error");
             }
 
             Uri movieForModeAndCollectUri = MovieContract.MovieEntry.buildMovieWithModeAndCollectUri(
                     mode);
-            Log.v("onCreateLoader","create movieForModeUri: " + movieForModeAndCollectUri.toString());
+            Logger.d("onCreateLoader","create movieForModeUri: " + movieForModeAndCollectUri.toString());
 
             CursorLoader cursorLoader = new CursorLoader(getActivity(),
                     movieForModeAndCollectUri,
@@ -300,7 +303,7 @@ public class MovieFragment extends Fragment {
         @Override
         public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
             mMovieAdapter.swapCursor(cursor);
-            Log.d("onLoadFinished","onLoadFinished" );
+            Logger.d("onLoadFinished","onLoadFinished" );
             if (mPosition != GridView.INVALID_POSITION) {
                 // If we don't need to restart the loader, and there's a desired position to restore
                 // to, do so now.

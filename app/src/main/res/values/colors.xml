@@ -33,5 +33,9 @@
 
     <color name="hint_textcolor">#000000</color>
     <color name="hint_background">#cccccc</color>
+    <color name="grid_fragment_background">#FFFFFF</color>
+    <color name="grid_item_title_background">#7FFFFFFF</color>
+    <color name="grid_item_title_textcolor">#000000</color>
+    <color name="gridview_movie_empty_textcolor">#000000</color>
 
 </resources>

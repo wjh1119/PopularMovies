@@ -8,7 +8,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,7 +16,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -143,7 +141,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
                 mCollectMenuItem.setIcon(R.drawable.ic_favorite_border_white_24dp);
             }
         }else{
-            Log.d(LOG_TAG,"mIsCollect is null");
+            Logger.d(LOG_TAG,"mIsCollect is null");
         }
     }
 
@@ -156,16 +154,16 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         //实现收藏功能
         int id = item.getItemId();
         if (id == R.id.action_collect) {
-            Log.v(LOG_TAG,"click");
+            Logger.v(LOG_TAG,"click");
             if(mIsCollect.equals("false")){//“收藏”
-                Toast.makeText(getContext(),"收藏成功", Toast.LENGTH_LONG).show();
+                ToastUtil.show(getContext(),"收藏成功");
                 item.setIcon(R.drawable.ic_favorite_white_24dp);
                 //更新电影的collect值
                 UpdateCollectTask updateCollectTask = new UpdateCollectTask(getContext());
                 updateCollectTask.execute("true",mMovieId);
                 mIsCollect = "true";
             }else{
-                Toast.makeText(getContext(),"取消收藏", Toast.LENGTH_LONG).show();
+                ToastUtil.show(getContext(),"取消收藏");
                 item.setIcon(R.drawable.ic_favorite_border_white_24dp);
                 //更新电影的collect值
                 UpdateCollectTask updateCollectTask = new UpdateCollectTask(getContext());
@@ -236,7 +234,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
                             mCollectMenuItem.setIcon(R.drawable.ic_favorite_border_white_24dp);
                         }
                     }else{
-                        Log.d(LOG_TAG,"mIsCollect is null");
+                        Logger.d(LOG_TAG,"mIsCollect is null");
                     }
 
                     //载入电影上映日期
@@ -276,7 +274,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
 
             @Override
             public void onDataFailed() {
-                Toast.makeText(getContext(),"获取影片详细信息失败",Toast.LENGTH_SHORT).show();
+                ToastUtil.show(getContext(),"获取影片详细信息失败");
             }
         });
         fetchDetailTask.execute(mData);
@@ -291,7 +289,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
 
             @Override
             public void onDataFailed() {
-                Toast.makeText(getContext(),"获取评论数据失败",Toast.LENGTH_SHORT).show();
+                ToastUtil.show(getContext(),"获取评论数据失败");
             }
         });
         fetchReviewsTask.execute(mData);
@@ -306,7 +304,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
 
             @Override
             public void onDataFailed() {
-                Toast.makeText(getContext(),"获取预告片数据失败",Toast.LENGTH_SHORT).show();
+                ToastUtil.show(getContext(),"获取预告片数据失败");
             }
         });
         fetchVideosTask.execute(mData);

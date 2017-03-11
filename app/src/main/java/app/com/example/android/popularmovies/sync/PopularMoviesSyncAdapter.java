@@ -2,6 +2,7 @@ package app.com.example.android.popularmovies.sync;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.AbstractThreadedSyncAdapter;
@@ -22,9 +23,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
-import android.util.Log;
-import android.widget.Toast;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,9 +36,11 @@ import java.net.URL;
 import java.util.Vector;
 
 import app.com.example.android.popularmovies.BuildConfig;
+import app.com.example.android.popularmovies.Logger;
 import app.com.example.android.popularmovies.MainActivity;
 import app.com.example.android.popularmovies.NetworkUtil;
 import app.com.example.android.popularmovies.R;
+import app.com.example.android.popularmovies.ToastUtil;
 import app.com.example.android.popularmovies.data.MovieContract;
 import app.com.example.android.popularmovies.data.MovieDbHelper;
 
@@ -75,9 +75,9 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
 
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
-        Log.d(LOG_TAG,"onPerformSync");
+        Logger.d(LOG_TAG,"onPerformSync");
         if (!NetworkUtil.getConnectivityStatus(getContext())){
-            Toast.makeText(getContext(),"无网络连接，无法获取网络数据", Toast.LENGTH_LONG).show();
+            ToastUtil.show(getContext(),"无网络连接，无法获取网络数据");
             return;
         }
         String movieJsonStrForPopular = getMovieJsonStr("popular");
@@ -87,7 +87,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
             int idOfFirstRankForTopratedBefore = getFirstRankIdByMode("toprated");
             
             setMovieRankToZero();
-            Log.d(LOG_TAG,"set rank of movies to 0");
+            Logger.d(LOG_TAG,"set rank of movies to 0");
             int idOfFirstRankForPopularAfter = getMovieDataFromJson(movieJsonStrForPopular,"popular");
             int idOfFirstRankForTopratedAfter = getMovieDataFromJson(movieJsonStrForToprated,"toprated");
             boolean isPopularFirstItemChanged
@@ -98,7 +98,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
             notifyMovie(isPopularFirstItemChanged,"popular",false);
             notifyMovie(isTopratedFirstItemChanged,"toprated",false);
         }catch (JSONException e) {
-            Log.e(LOG_TAG, e.getMessage(), e);
+            Logger.e(LOG_TAG, e.getMessage(), e);
             e.printStackTrace();
         }
     }
@@ -127,7 +127,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
             }else if(mode.equals("toprated")) {
                 BASE_URL = "http://api.themoviedb.org/3/movie/top_rated?";
             }else{
-                Log.v(LOG_TAG,"mode is wrong");
+                Logger.v(LOG_TAG,"mode is wrong");
                 return null;
             }
 
@@ -140,7 +140,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                     .build();
 
             URL url = new URL(builtPopularUri.toString());
-            Log.v(LOG_TAG,"url is " + url);
+            Logger.v(LOG_TAG,"url is " + url);
 
             // Create the request to Movie, and open the connection
             urlConnection = (HttpURLConnection) url.openConnection();
@@ -148,7 +148,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
             urlConnection.setRequestMethod("GET");
             urlConnection.connect();
 
-            Log.v(LOG_TAG,"url connected");
+            Logger.v(LOG_TAG,"url connected");
             // Read the input stream into a String
             InputStream inputStream = urlConnection.getInputStream();
             StringBuffer buffer = new StringBuffer();
@@ -168,10 +168,10 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                 return null;
             }
             movieJsonStr = buffer.toString();
-            Log.v(LOG_TAG,"movieJsonStr is " + movieJsonStr);
+            Logger.v(LOG_TAG,"movieJsonStr is " + movieJsonStr);
             return movieJsonStr;
         } catch (IOException e) {
-            Log.e(LOG_TAG, "Error ", e);
+            Logger.e(LOG_TAG, "Error ", e);
             // If the code didn't successfully get the weather data, there's no point in attemping
             // to parse it.
             return null;
@@ -183,7 +183,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                 try {
                     reader.close();
                 } catch (final IOException e) {
-                    Log.e(LOG_TAG, "Error closing stream", e);
+                    Logger.e(LOG_TAG, "Error closing stream", e);
                 }
             }
         }
@@ -326,7 +326,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                         movieValues.put(MovieContract.MovieEntry.COLUMN_TOPRATED_RANK, topratedRank);
                         movieValues.put(MovieContract.MovieEntry.COLUMN_REVIEWS, reviews);
                         movieValues.put(MovieContract.MovieEntry.COLUMN_VIDEOS, videos);
-                        Log.v(LOG_TAG,"insert movieValues: " + movieValues);
+                        Logger.v(LOG_TAG,"insert movieValues: " + movieValues);
 
                         cVVector.add(movieValues);
                     }else {
@@ -338,12 +338,12 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                         } else if (mode.equals("toprated")) {
                             rankValue.put(MovieContract.MovieEntry.COLUMN_TOPRATED_RANK, i + 1);
                         } else {
-                            Log.d(LOG_TAG, "mode is wrong");
+                            Logger.d(LOG_TAG, "mode is wrong");
                         }
 
                         getContext().getContentResolver().update(MovieContract.MovieEntry.CONTENT_URI,
                                 rankValue, idSelection, idSelectionArgs);
-                        Log.d(LOG_TAG,"movie is already in database,app only updates its rank");
+                        Logger.d(LOG_TAG,"movie is already in database,app only updates its rank");
                     }
                     getCursorById.close();
                 }
@@ -355,17 +355,17 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                     inserted = getContext().getContentResolver().bulkInsert(MovieContract.MovieEntry.CONTENT_URI, cvArray);
                 }
 
-                Log.d(LOG_TAG, "FetchWeatherTask Complete. " + inserted + " Inserted");
+                Logger.d(LOG_TAG, "FetchWeatherTask Complete. " + inserted + " Inserted");
                 db.close();
-                Log.d(LOG_TAG,"fetch data from internet");
+                Logger.d(LOG_TAG,"fetch data from internet");
             }else{
-                Log.d(LOG_TAG,"fail to fetch data ,because Json is null");
+                Logger.d(LOG_TAG,"fail to fetch data ,because Json is null");
             }
         } catch (JSONException e) {
-            Log.e(LOG_TAG, e.getMessage(), e);
+            Logger.e(LOG_TAG, e.getMessage(), e);
             e.printStackTrace();
         }catch (NullPointerException e){
-            Log.e(LOG_TAG,e.getMessage(), e);
+            Logger.e(LOG_TAG,e.getMessage(), e);
         }
         return firstRankId;
     }
@@ -405,7 +405,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                     .build();
 
             URL url = new URL(builtPopularUri.toString());
-            Log.d(LOG_TAG,"url is " + url);
+            Logger.d(LOG_TAG,"url is " + url);
 
             // Create the request to OpenWeatherMap, and open the connection
             urlConnection = (HttpURLConnection) url.openConnection();
@@ -413,7 +413,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
             urlConnection.setConnectTimeout(10000);
             urlConnection.connect();
 
-            Log.v(LOG_TAG,"url connected");
+            Logger.v(LOG_TAG,"url connected");
             // Read the input stream into a String
             InputStream inputStream = urlConnection.getInputStream();
             StringBuffer buffer = new StringBuffer();
@@ -433,10 +433,10 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                 return null;
             }
             movieJsonStr = buffer.toString();
-            Log.d(LOG_TAG,dataName + "JsonStr is " + movieJsonStr);
+            Logger.d(LOG_TAG,dataName + "JsonStr is " + movieJsonStr);
             return movieJsonStr;
         } catch (IOException e) {
-            Log.e(LOG_TAG, "Error ", e);
+            Logger.e(LOG_TAG, "Error ", e);
             // If the code didn't successfully get the weather data, there's no point in attemping
             // to parse it.
             return null;
@@ -448,7 +448,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                 try {
                     reader.close();
                 } catch (final IOException e) {
-                    Log.e(LOG_TAG, "Error closing stream", e);
+                    Logger.e(LOG_TAG, "Error closing stream", e);
                 }
             }
         }
@@ -613,12 +613,12 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
         SYNC_INTERVAL = Integer.parseInt(syncInterval) * 60 * 60;
         SYNC_FLEXTIME = SYNC_INTERVAL / 3;
         PopularMoviesSyncAdapter.configurePeriodicSync(context, SYNC_INTERVAL, SYNC_FLEXTIME);
-        Log.d("changeSyncInterval","syncinterval is " + SYNC_INTERVAL);
+        Logger.d("changeSyncInterval","syncinterval is " + SYNC_INTERVAL);
     }
 
     private void notifyMovie(boolean isFirstItemChanged,String mode,boolean isNotifyIfNotChanged) {
         if (!isFirstItemChanged && !isNotifyIfNotChanged){
-            Log.d(LOG_TAG,"not notify");
+            Logger.d(LOG_TAG,"not notify");
             return;
         }
         Context context = getContext();
@@ -670,7 +670,7 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                     // notifications.  Just throw in some data.
                     NotificationCompat.Builder mBuilder =
                             new NotificationCompat.Builder(getContext())
-                                    .setSmallIcon(R.drawable.ic_launcher)
+                                    .setSmallIcon(R.drawable.ic_movie_black_24dp)
                                     .setContentTitle(title)
                                     .setContentText(contentText);
 
@@ -694,7 +694,11 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                     NotificationManager mNotificationManager =
                             (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
                     // NOTIFICATION_ID allows you to update the notification later on.
-                    mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
+                    Notification notification = mBuilder.build();
+
+                    //点击时取消
+                    notification.flags |= Notification.FLAG_AUTO_CANCEL;
+                    mNotificationManager.notify(NOTIFICATION_ID, notification);
 
                     //refreshing last sync
                     SharedPreferences.Editor editor = prefs.edit();
