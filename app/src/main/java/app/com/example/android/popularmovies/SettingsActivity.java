@@ -15,6 +15,7 @@
  */
 package app.com.example.android.popularmovies;
 
+import android.app.ActionBar;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -40,7 +41,11 @@ public class SettingsActivity extends PreferenceActivity
         addPreferencesFromResource(R.xml.pref_general);
 
         //在`Actionbar`上显示一个返回上一级按钮
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+        //当设备的API(系统的标识)大于11(Android 3.0)的时候
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
+            ActionBar actionBar = getActionBar();
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
 
         // For all preferences, attach an OnPreferenceChangeListener so the UI summary can be
         // updated when the preference changes.

@@ -1,5 +1,6 @@
 package app.com.example.android.popularmovies;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -10,6 +11,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import app.com.example.android.popularmovies.sync.PopularMoviesSyncAdapter;
+
+import static app.com.example.android.popularmovies.sync.PopularMoviesSyncAdapter.syncImmediately;
 
 public class MainActivity extends ActionBarActivity
         implements MovieFragment.Callback, DetailFragment.Callback{
@@ -31,6 +34,8 @@ public class MainActivity extends ActionBarActivity
     private boolean mIsShowCollection = false;
 
     private static MenuItem mShowCollectionItem;
+
+    private ProgressDialog mProgressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,7 +121,14 @@ public class MainActivity extends ActionBarActivity
             }
             return true;
         }
-
+        if(id == R.id.action_refresh){
+            if (!NetworkUtil.getConnectivityStatus(this)){
+                ToastUtil.show(this,"无网络连接，刷新失败");
+                return super.onOptionsItemSelected(item);
+            }
+            ToastUtil.show(this,"正在刷新，请稍等");
+            syncImmediately(this);
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -216,9 +228,18 @@ public class MainActivity extends ActionBarActivity
         public void handleMessage(Message msg) {
             if(msg.what == MSG_NONE_ITEM_IN_LIST) {
                 showHintInDetailContainerOrToast("电影列表暂无数据，数据正在加载中，请稍等");
+                if (mProgressDialog==null){
+                    mProgressDialog=new ProgressDialog(MainActivity.this);
+                    mProgressDialog.setMessage("正在加载中...");
+                    mProgressDialog.setCanceledOnTouchOutside(false);
+                }
+                mProgressDialog.show();
             }
             if(msg.what == MSG_FIRST_LOADING_FINISHED) {
                 showHintInDetailContainerOrToast("数据加载完毕，请点击海报查看电影详细信息");
+                if (mProgressDialog!=null && mProgressDialog.isShowing()){
+                    mProgressDialog.dismiss();
+                }
             }
         }
     };

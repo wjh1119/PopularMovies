@@ -170,7 +170,9 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
                 updateCollectTask.execute("false",mMovieId);
                 mIsCollect = "false";
                 //告知MainActivity该电影取消收藏
-                ((Callback) getActivity()).onCancelCollection();
+                if(getActivity() instanceof MainActivity){
+                    ((Callback) getActivity()).onCancelCollection();
+                }
             }
             return true;
         }

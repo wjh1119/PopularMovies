@@ -7,6 +7,10 @@
         android:title="@string/action_settings"
         android:orderInCategory="100"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_refresh"
+        android:title="@string/action_refresh"
+        app:showAsAction="never" />
     <item android:id="@+id/action_showCollection"
         android:title="@string/action_showCollection"
         app:showAsAction="never" />

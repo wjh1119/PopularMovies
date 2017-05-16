@@ -16,9 +16,9 @@ public class MovieDbHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "movie.db";
 
-    private static MovieDbHelper instance;
+    private volatile static MovieDbHelper instance;
 
-    public MovieDbHelper(Context context) {
+    private MovieDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
@@ -27,10 +27,22 @@ public class MovieDbHelper extends SQLiteOpenHelper {
      * @param context 上下文
      * @return  instance
      */
-    public static MovieDbHelper getDbHelper(Context context){
-        if(instance==null)
-            instance=new MovieDbHelper(context);
-        return instance;
+    public static MovieDbHelper getDbHelper(Context context) {
+        MovieDbHelper temp = instance;
+        if (temp == null) {
+            synchronized (MovieDbHelper.class) {
+                temp = instance;
+                if (temp == null) {
+                    //这里实际上是三层操作
+                    //1.在堆中开闭空间；2.初始化对象；3.赋值操作
+                    //由于JVM不能保证步骤2和步骤3的顺序，因此要创建一个temp临时对象
+                    //从而避免instance为null的情况
+                    temp = new MovieDbHelper(context);
+                    instance = temp;
+                }
+            }
+        }
+        return temp;
     }
 
     @Override
