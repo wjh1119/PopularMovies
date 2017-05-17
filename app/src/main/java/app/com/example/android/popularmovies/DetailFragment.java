@@ -17,6 +17,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -171,7 +173,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
                 mIsCollect = "false";
                 //告知MainActivity该电影取消收藏
                 if(getActivity() instanceof MainActivity){
-                    ((Callback) getActivity()).onCancelCollection();
+                    EventBus.getDefault().post(new MessageEvent("onCancelCollection"));
                 }
             }
             return true;
@@ -320,7 +322,4 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         super.onDestroyView();
     }
 
-    public interface Callback {
-        void onCancelCollection();
-    }
 }

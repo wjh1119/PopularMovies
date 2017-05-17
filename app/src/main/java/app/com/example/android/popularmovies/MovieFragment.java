@@ -30,6 +30,8 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
 
+import org.greenrobot.eventbus.EventBus;
+
 import app.com.example.android.popularmovies.data.MovieContract;
 
 import static app.com.example.android.popularmovies.data.MovieContract.MovieEntry.COLUMN_POPULAR_RANK;
@@ -43,7 +45,6 @@ public class MovieFragment extends Fragment {
     private static final int MOVIE_LOADER = 0;
     private static final int COLLECTION_LOADER = 1;
     private boolean mIsShowCollection = false;
-    private boolean mIsFirstLoading = false;
 
     private GridView mGridView;
     private int mPosition = GridView.INVALID_POSITION;
@@ -125,17 +126,17 @@ public class MovieFragment extends Fragment {
                     Logger.v("intent","cursor" +" popular rank: " + cursor.getInt(COL_POPULAR_RANK) +
                             ", toprated rank: "+ cursor.getInt(COL_TOPRATED_RANK));
                     if (mode.equals("popular")){
-                        ((Callback) getActivity())
-                                .onItemSelected(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
+                        EventBus.getDefault().post(new MessageEvent("onItemSelected",
+                                MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
                                         mode, cursor.getInt(COL_POPULAR_RANK)
-                                ));
+                                )));
                         Logger.v("intent","sent intent with mode: "+ mode +" and rank: "
                                 + cursor.getInt(COL_POPULAR_RANK));
                     }else if (mode.equals("toprated")){
-                        ((Callback) getActivity())
-                                .onItemSelected(MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
+                        EventBus.getDefault().post(new MessageEvent("onItemSelected",
+                                MovieContract.MovieEntry.buildMovieWithModeAndRankUri(
                                         mode, cursor.getInt(COL_TOPRATED_RANK)
-                                ));
+                                )));
                         Logger.v("intent","sent intent with mode: "+ mode +" and rank: "
                                 + cursor.getInt(COL_TOPRATED_RANK));
                     }else{
@@ -257,14 +258,8 @@ public class MovieFragment extends Fragment {
 
             //第一次加载数据库里没有数据，给予用户提示
             if (!cursor.moveToFirst()){
-                ((Callback) getActivity()).onNoneItemInList();
+                EventBus.getDefault().post(new MessageEvent("onNoneItemInList"));
                 Logger.d(LOG_TAG,"onNoneItemInList");
-                mIsFirstLoading = true;
-            }
-            if(cursor.moveToFirst() && mIsFirstLoading){
-                ((Callback) getActivity()).onFirstLoadingFinished();
-                Logger.d(LOG_TAG,"onFirstLoadingFinished");
-                mIsFirstLoading = false;
             }
         }
 
@@ -315,12 +310,6 @@ public class MovieFragment extends Fragment {
         public void onLoaderReset(Loader<Cursor> cursorLoader) {
             mMovieAdapter.swapCursor(null);
         }
-    }
-
-    public interface Callback {
-        void onItemSelected(Uri contentUri);
-        void onNoneItemInList();
-        void onFirstLoadingFinished();
     }
 }
 

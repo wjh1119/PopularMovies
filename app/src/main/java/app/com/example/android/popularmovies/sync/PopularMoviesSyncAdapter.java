@@ -23,6 +23,8 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
+
+import org.greenrobot.eventbus.EventBus;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,6 +40,7 @@ import java.util.Vector;
 import app.com.example.android.popularmovies.BuildConfig;
 import app.com.example.android.popularmovies.Logger;
 import app.com.example.android.popularmovies.MainActivity;
+import app.com.example.android.popularmovies.MessageEvent;
 import app.com.example.android.popularmovies.NetworkUtil;
 import app.com.example.android.popularmovies.R;
 import app.com.example.android.popularmovies.ToastUtil;
@@ -95,6 +98,14 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
             boolean isTopratedFirstItemChanged
                     = idOfFirstRankForTopratedBefore != idOfFirstRankForTopratedAfter;
             //通知用户某一模式下的排名的变化，第三个参数为当无变化时是否通知用户。
+
+            if (idOfFirstRankForPopularAfter != -1 && idOfFirstRankForTopratedAfter != -1) {
+                EventBus.getDefault().post(new MessageEvent("onLoadingFinished"));
+                Logger.d(LOG_TAG,"onLoadingFinished");
+            }else{
+                EventBus.getDefault().post(new MessageEvent("onDownloadFailed"));
+                Logger.d(LOG_TAG,"onDownloadFailed");
+            }
             notifyMovie(isPopularFirstItemChanged,"popular",false);
             notifyMovie(isTopratedFirstItemChanged,"toprated",false);
         }catch (JSONException e) {
@@ -598,11 +609,6 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
          * Without calling setSyncAutomatically, our periodic sync will not be enabled.
          */
         ContentResolver.setSyncAutomatically(newAccount, context.getString(R.string.content_authority), true);
-
-        /*
-         * Finally, let's do a sync to get things started
-         */
-        syncImmediately(context);
     }
 
     public static void initializeSyncAdapter(Context context) {
