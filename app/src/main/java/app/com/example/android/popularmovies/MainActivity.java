@@ -10,19 +10,23 @@ import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import app.com.example.android.popularmovies.sync.PopularMoviesSyncAdapter;
 
 import static app.com.example.android.popularmovies.sync.PopularMoviesSyncAdapter.syncImmediately;
 
-public class MainActivity extends ActionBarActivity
-        implements MovieFragment.Callback, DetailFragment.Callback{
+public class MainActivity extends ActionBarActivity {
 
     private final String LOG_TAG = MainActivity.class.getSimpleName();
     private static final String DETAILFRAGMENT_TAG = "DFTAG";
     private static final String HINTFRAGMENT_TAG = "HFTAG";
 
     private static final int MSG_NONE_ITEM_IN_LIST = 1001;
-    private static final int  MSG_FIRST_LOADING_FINISHED = 1002;
+    private static final int MSG_FIRST_LOADING_FINISHED = 1002;
+    private static final int MSG_FIRST_LOADING_FAILED = 1001;
 
     private static final String ISSHOWCOLLECTION_KEY = "isshwocollection";
 
@@ -36,6 +40,7 @@ public class MainActivity extends ActionBarActivity
     private static MenuItem mShowCollectionItem;
 
     private ProgressDialog mProgressDialog;
+    private boolean mIsFirstLoading = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,14 +68,14 @@ public class MainActivity extends ActionBarActivity
         //读取是否收藏
         if (savedInstanceState != null) {
             Logger.d(LOG_TAG, "savedInstanceState isn't null");
-            if (savedInstanceState.containsKey(ISSHOWCOLLECTION_KEY)){
+            if (savedInstanceState.containsKey(ISSHOWCOLLECTION_KEY)) {
                 mIsShowCollection = savedInstanceState.getBoolean(ISSHOWCOLLECTION_KEY);
-                Logger.d("onCreate","mIsShowCollection is " + mIsShowCollection);
+                Logger.d("onCreate", "mIsShowCollection is " + mIsShowCollection);
             }
         }
 
         PopularMoviesSyncAdapter.initializeSyncAdapter(this);
-        Logger.d(LOG_TAG,"initializeSyncAdapter");
+        Logger.d(LOG_TAG, "initializeSyncAdapter");
     }
 
     @Override
@@ -84,7 +89,7 @@ public class MainActivity extends ActionBarActivity
         //判断该电影是否被收藏，并以此显示对应的菜单“收藏”或“取消收藏”。
         if (mIsShowCollection) {
             mShowCollectionItem.setTitle(getString(R.string.action_showCollection_showAllMovies));//“全部电影列表”
-        }else{
+        } else {
             mShowCollectionItem.setTitle(getString(R.string.action_showCollection));//“我的收藏列表”
         }
         return true;
@@ -102,46 +107,57 @@ public class MainActivity extends ActionBarActivity
             return true;
         }
         if (id == R.id.action_showCollection) {
-            if(!mIsShowCollection){//
+            if (!mIsShowCollection) {//
                 item.setTitle(getString(R.string.action_showCollection_showAllMovies));//“全部电影列表”
                 mIsShowCollection = true;
-                MovieFragment mf = (MovieFragment)getSupportFragmentManager().findFragmentById(R.id.main_container);
-                if ( null != mf ) {
+                MovieFragment mf = (MovieFragment) getSupportFragmentManager().findFragmentById(R.id.main_container);
+                if (null != mf) {
                     mf.onIsShowCollectionChanged(mIsShowCollection);
                 }
                 showHintInDetailContainerOrToast("电影列表已变更为我的收藏列表");
-            }else{
+            } else {
                 item.setTitle(getString(R.string.action_showCollection));//“我的收藏列表”
                 mIsShowCollection = false;
-                MovieFragment mf = (MovieFragment)getSupportFragmentManager().findFragmentById(R.id.main_container);
-                if ( null != mf ) {
+                MovieFragment mf = (MovieFragment) getSupportFragmentManager().findFragmentById(R.id.main_container);
+                if (null != mf) {
                     mf.onIsShowCollectionChanged(mIsShowCollection);
                 }
                 showHintInDetailContainerOrToast("电影列表已变更为全部电影列表");
             }
             return true;
         }
-        if(id == R.id.action_refresh){
-            if (!NetworkUtil.getConnectivityStatus(this)){
-                ToastUtil.show(this,"无网络连接，刷新失败");
+        if (id == R.id.action_refresh) {
+            if (!NetworkUtil.getConnectivityStatus(this)) {
+                ToastUtil.show(this, "无网络连接，刷新失败");
                 return super.onOptionsItemSelected(item);
             }
-            ToastUtil.show(this,"正在刷新，请稍等");
+            if (mProgressDialog == null) {
+                mProgressDialog = new ProgressDialog(MainActivity.this);
+                mProgressDialog.setMessage("正在加载中...");
+                mProgressDialog.setCanceledOnTouchOutside(false);
+            }
+            mProgressDialog.show();
             syncImmediately(this);
         }
         return super.onOptionsItemSelected(item);
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
-        String mode = Utility.getPreferredMode( this );
+        String mode = Utility.getPreferredMode(this);
         String syncInterval = Utility.getPreferredSyncInterval(this);
-        Logger.d(LOG_TAG,"onResume");
+        Logger.d(LOG_TAG, "onResume");
         // update the mode in our second pane using the fragment manager
         if (mode != null && !mode.equals(mMode)) {
-            MovieFragment mf = (MovieFragment)getSupportFragmentManager().findFragmentById(R.id.main_container);
-            if ( null != mf ) {
+            MovieFragment mf = (MovieFragment) getSupportFragmentManager().findFragmentById(R.id.main_container);
+            if (null != mf) {
                 mf.onModeChanged(mIsShowCollection);
             }
             showHintInDetailContainerOrToast("电影列表更改排序方式");
@@ -150,13 +166,19 @@ public class MainActivity extends ActionBarActivity
         }
 
         if (syncInterval != null && !syncInterval.equals(mSyncInterval)) {
-            mSyncInterval= syncInterval;
-            PopularMoviesSyncAdapter.changeSyncInterval(this,mSyncInterval);
+            mSyncInterval = syncInterval;
+            PopularMoviesSyncAdapter.changeSyncInterval(this, mSyncInterval);
         }
     }
 
-    private void showHintInDetailContainerOrToast(String hint){
-        if (mTwoPane){
+    @Override
+    protected void onStop() {
+        super.onStop();
+        EventBus.getDefault().unregister(this);
+    }
+
+    private void showHintInDetailContainerOrToast(String hint) {
+        if (mTwoPane) {
             Bundle args = new Bundle();
             args.putString(HintFragment.HINT, hint);
 
@@ -166,32 +188,8 @@ public class MainActivity extends ActionBarActivity
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.detail_container, fragment, HINTFRAGMENT_TAG)
                     .commit();
-        }else{
-            ToastUtil.show(this,hint);
-        }
-    }
-
-    @Override
-    public void onItemSelected(Uri contentUri) {
-        if (mTwoPane) {
-            // In two-pane mode, show the detail view in this activity by
-            // adding or replacing the detail fragment using a
-            // fragment transaction.
-            Bundle args = new Bundle();
-            args.putParcelable(DetailFragment.DETAIL_URI, contentUri);
-
-            DetailFragment fragment = new DetailFragment();
-            fragment.setArguments(args);
-
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.detail_container, fragment, DETAILFRAGMENT_TAG)
-                    .commit();
-            Logger.d("Click","mTwoPane is true ");
         } else {
-            Intent intent = new Intent(this, DetailActivity.class)
-                    .setData(contentUri);
-            startActivity(intent);
-            Logger.d("Click","mTwoPane is false ");
+            ToastUtil.show(this, hint);
         }
     }
 
@@ -204,42 +202,91 @@ public class MainActivity extends ActionBarActivity
         super.onSaveInstanceState(outState);
     }
 
-    @Override
-    public void onCancelCollection() {
-        if(mTwoPane && mIsShowCollection){
+    @Subscribe
+    public void onCancelCollection(MessageEvent event) {
+        if (event.msg.equals("onCancelCollection") && mTwoPane && mIsShowCollection) {
             showHintInDetailContainerOrToast("该电影不在收藏列表，请重新选择");
         }
     }
 
-    @Override
-    public void onNoneItemInList() {
-        if (!mIsShowCollection){
-            handler.sendEmptyMessage(MSG_NONE_ITEM_IN_LIST);
+    @Subscribe
+    public void onItemSelected(MessageEvent event) {
+        if (event.msg.equals("onItemSelected") && (event.object instanceof Uri)) {
+            Uri contentUri = (Uri) event.object;
+
+            if (mTwoPane) {
+                // In two-pane mode, show the detail view in this activity by
+                // adding or replacing the detail fragment using a
+                // fragment transaction.
+                Bundle args = new Bundle();
+                args.putParcelable(DetailFragment.DETAIL_URI, contentUri);
+
+                DetailFragment fragment = new DetailFragment();
+                fragment.setArguments(args);
+
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.detail_container, fragment, DETAILFRAGMENT_TAG)
+                        .commit();
+                Logger.d("Click", "mTwoPane is true ");
+            } else {
+                Intent intent = new Intent(this, DetailActivity.class)
+                        .setData(contentUri);
+                startActivity(intent);
+                Logger.d("Click", "mTwoPane is false ");
+            }
         }
     }
 
-    @Override
-    public void onFirstLoadingFinished() {
-        handler.sendEmptyMessage(MSG_FIRST_LOADING_FINISHED);
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onNoneItemInList(MessageEvent event) {
+        if (event.msg.equals("onNoneItemInList") && !mIsShowCollection) {
+            if (!mIsFirstLoading){
+                //当列表中没有数据时，立刻同步
+                syncImmediately(this);
+                handler.sendEmptyMessage(MSG_NONE_ITEM_IN_LIST);
+                mIsFirstLoading = true;
+            }
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onLoadingFinished(MessageEvent event) {
+        if (event.msg.equals("onLoadingFinished") && mIsFirstLoading) {
+            handler.sendEmptyMessage(MSG_FIRST_LOADING_FINISHED);
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onDownloadFailed(MessageEvent event) {
+        if (event.msg.equals("onDownloadFailed")) {
+            Logger.d(LOG_TAG, "onDownloadFailed");
+            showHintInDetailContainerOrToast("刷新失败，无法从网络获取全部电影信息");
+            if (mProgressDialog != null && mProgressDialog.isShowing()) {
+                mProgressDialog.dismiss();
+            }
+        }
     }
 
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            if(msg.what == MSG_NONE_ITEM_IN_LIST) {
+            if (msg.what == MSG_NONE_ITEM_IN_LIST) {
                 showHintInDetailContainerOrToast("电影列表暂无数据，数据正在加载中，请稍等");
-                if (mProgressDialog==null){
-                    mProgressDialog=new ProgressDialog(MainActivity.this);
+                if (mProgressDialog == null) {
+                    mProgressDialog = new ProgressDialog(MainActivity.this);
                     mProgressDialog.setMessage("正在加载中...");
                     mProgressDialog.setCanceledOnTouchOutside(false);
                 }
-                mProgressDialog.show();
+                if (!mProgressDialog.isShowing()) {
+                    mProgressDialog.show();
+                }
             }
-            if(msg.what == MSG_FIRST_LOADING_FINISHED) {
+            if (msg.what == MSG_FIRST_LOADING_FINISHED) {
                 showHintInDetailContainerOrToast("数据加载完毕，请点击海报查看电影详细信息");
-                if (mProgressDialog!=null && mProgressDialog.isShowing()){
+                if (mProgressDialog != null && mProgressDialog.isShowing()) {
                     mProgressDialog.dismiss();
                 }
+                mIsFirstLoading = false;
             }
         }
     };
