@@ -242,7 +242,7 @@ public class MainActivity extends ActionBarActivity {
         if (event.msg.equals("onNoneItemInList") && !mIsShowCollection) {
             if (!mIsFirstLoading){
                 //当列表中没有数据时，立刻同步
-                syncImmediately(this);
+//                syncImmediately(this);
                 handler.sendEmptyMessage(MSG_NONE_ITEM_IN_LIST);
                 mIsFirstLoading = true;
             }
@@ -286,7 +286,6 @@ public class MainActivity extends ActionBarActivity {
                 if (mProgressDialog != null && mProgressDialog.isShowing()) {
                     mProgressDialog.dismiss();
                 }
-                mIsFirstLoading = false;
             }
         }
     };

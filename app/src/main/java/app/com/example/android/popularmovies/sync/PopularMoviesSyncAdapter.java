@@ -52,7 +52,7 @@ import static app.com.example.android.popularmovies.Utility.getImageFromUrl;
 
 public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
     public final String LOG_TAG = PopularMoviesSyncAdapter.class.getSimpleName();
-    // Interval at which to sync with the weather, in seconds.
+    // Interval at which to sync with the movie, in seconds.
     public static int SYNC_INTERVAL = 60*60*3;  // 3 hours
     public static int SYNC_FLEXTIME = SYNC_INTERVAL/3;
 
@@ -104,7 +104,9 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                 Logger.d(LOG_TAG,"onLoadingFinished");
             }else{
                 EventBus.getDefault().post(new MessageEvent("onDownloadFailed"));
-                Logger.d(LOG_TAG,"onDownloadFailed");
+                Logger.d(LOG_TAG,"onDownloadFailed " +
+                        " idOfFirstRankForPopularAfter is "+ idOfFirstRankForPopularAfter +
+                " idOfFirstRankForTopratedAfter is " + idOfFirstRankForTopratedAfter);
             }
             notifyMovie(isPopularFirstItemChanged,"popular",false);
             notifyMovie(isTopratedFirstItemChanged,"toprated",false);
