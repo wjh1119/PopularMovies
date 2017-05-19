@@ -52,7 +52,7 @@ import static app.com.example.android.popularmovies.Utility.getImageFromUrl;
 
 public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
     public final String LOG_TAG = PopularMoviesSyncAdapter.class.getSimpleName();
-    // Interval at which to sync with the weather, in seconds.
+    // Interval at which to sync with the movie, in seconds.
     public static int SYNC_INTERVAL = 60*60*3;  // 3 hours
     public static int SYNC_FLEXTIME = SYNC_INTERVAL/3;
 
@@ -104,7 +104,9 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                 Logger.d(LOG_TAG,"onLoadingFinished");
             }else{
                 EventBus.getDefault().post(new MessageEvent("onDownloadFailed"));
-                Logger.d(LOG_TAG,"onDownloadFailed");
+                Logger.d(LOG_TAG,"onDownloadFailed " +
+                        " idOfFirstRankForPopularAfter is "+ idOfFirstRankForPopularAfter +
+                " idOfFirstRankForTopratedAfter is " + idOfFirstRankForTopratedAfter);
             }
             notifyMovie(isPopularFirstItemChanged,"popular",false);
             notifyMovie(isTopratedFirstItemChanged,"toprated",false);
@@ -237,28 +239,6 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                 MovieDbHelper dbHelper = MovieDbHelper.getDbHelper(getContext());
                 SQLiteDatabase db = dbHelper.getWritableDatabase();
 
-                ContentValues movieValues = new ContentValues();
-
-                //MovieEntry所需要的数据
-                String posterPath;
-                Bitmap posterImage;
-                String adult;
-                String overview;
-                String releaseDate;
-                String reviews;
-                String videos;
-                String originalTitle;
-                String originalLanguage;
-                String title;
-                float popularity;
-                int voteCount;
-                String video;
-                float voteAverage;
-                String collect;
-                int runtime;
-                int popularRank;
-                int topratedRank;
-
                 // Insert the new movie information into the database
                 Vector<ContentValues> cVVector = new Vector<ContentValues>(movieArray.length());
                 for(int i = 0; i < numberOfMovie; i++) {
@@ -288,6 +268,27 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
 
                     if (!getCursorById.moveToFirst())
                     {
+                        ContentValues movieValues = new ContentValues();
+
+                        //MovieEntry所需要的数据
+                        String posterPath;
+                        Bitmap posterImage;
+                        String adult;
+                        String overview;
+                        String releaseDate;
+                        String reviews;
+                        String videos;
+                        String originalTitle;
+                        String originalLanguage;
+                        String title;
+                        float popularity;
+                        int voteCount;
+                        String video;
+                        float voteAverage;
+                        String collect;
+                        int runtime;
+                        int popularRank;
+                        int topratedRank;
 
                         //获取电影海报地址
                         posterPath = "https://image.tmdb.org/t/p/w185" + movieInfo.getString(OWM_POSTER_PATH);
