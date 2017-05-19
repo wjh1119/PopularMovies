@@ -237,6 +237,28 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
                 MovieDbHelper dbHelper = MovieDbHelper.getDbHelper(getContext());
                 SQLiteDatabase db = dbHelper.getWritableDatabase();
 
+                ContentValues movieValues = new ContentValues();
+
+                //MovieEntry所需要的数据
+                String posterPath;
+                Bitmap posterImage;
+                String adult;
+                String overview;
+                String releaseDate;
+                String reviews;
+                String videos;
+                String originalTitle;
+                String originalLanguage;
+                String title;
+                float popularity;
+                int voteCount;
+                String video;
+                float voteAverage;
+                String collect;
+                int runtime;
+                int popularRank;
+                int topratedRank;
+
                 // Insert the new movie information into the database
                 Vector<ContentValues> cVVector = new Vector<ContentValues>(movieArray.length());
                 for(int i = 0; i < numberOfMovie; i++) {
@@ -266,27 +288,6 @@ public class PopularMoviesSyncAdapter extends AbstractThreadedSyncAdapter {
 
                     if (!getCursorById.moveToFirst())
                     {
-                        ContentValues movieValues = new ContentValues();
-
-                        //MovieEntry所需要的数据
-                        String posterPath;
-                        Bitmap posterImage;
-                        String adult;
-                        String overview;
-                        String releaseDate;
-                        String reviews;
-                        String videos;
-                        String originalTitle;
-                        String originalLanguage;
-                        String title;
-                        float popularity;
-                        int voteCount;
-                        String video;
-                        float voteAverage;
-                        String collect;
-                        int runtime;
-                        int popularRank;
-                        int topratedRank;
 
                         //获取电影海报地址
                         posterPath = "https://image.tmdb.org/t/p/w185" + movieInfo.getString(OWM_POSTER_PATH);

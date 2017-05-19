@@ -11,3 +11,12 @@
 ## 依赖库
 - [butterknife](https://github.com/JakeWharton/butterknife)
 - [eventbus](https://github.com/greenrobot/EventBus)
+## 注意
+因版权原因，本项目不提供api key。
+若运行时遇到以下错误：
+
+    Error:(150, 67) 错误: 找不到符号
+    符号:   变量 OPEN_MOVIE_API_KEY
+    位置: 类 BuildConfig
+
+只需于[The Movie Database](https://www.themoviedb.org/)申请API_KEY，并替换以上变量即可。
